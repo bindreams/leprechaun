@@ -1,0 +1,8 @@
+address: EXAMPLEWALLET1234567890123456789012345678901234567890123456789012345678901234567890123456789012
+idle-timeout: 1  # Idle time in minutes
+# Weak miner configuration
+weak-priority: 1  # 0 - idle, 2 - normal, 5 - maximum
+weak-threads: 8
+# Strong miner configuration
+strong-priority: 2  # 0 - idle, 2 - normal, 5 - maximum
+strong-threads: 24
