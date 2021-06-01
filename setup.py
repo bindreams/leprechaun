@@ -3,7 +3,9 @@ from setuptools import setup, find_packages
 
 install_requires = [
     "pywin32",
-    "pyyaml"
+    "pyyaml",
+    "PySide2",
+    "pyinstaller"
 ]
 
 entry_points = {
