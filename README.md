@@ -1,8 +1,19 @@
 # Leprechaun
-Leprechaun is a Windows system tray program that mines XMR (Monero) at unintrusive rates. It has two miners: a weak one for when you are using your pc, and a strong one for when you are AFK. These can be controlled when leprechaun is running from the system tray.
+Leprechaun is a Windows system tray program that mines Ethereum, Monero, and other cryptocurrencies in the background while you work.
+A configuration file allows you to fine-tune which miners work, at what time of day, while you are afk, etc.
 
-## Setup
-Requirements: python 3.9, git
+## Install
+To install leprechaun, execute the following command in powershell:
+```
+iwr -useb "https://github.com/andreasxp/leprechaun/releases/download/0.2.0/install-leprechaun.ps1" | iex;
+```
+This will download and execute a script which will install leprechaun to your appdata folder.
+
+On first launch, Leprechaun will prompt you to configure your miners as you wish.
+The configuration will be located in `~/leprechaun.yml`.
+
+## Manual build
+Requirements: [python 3.9](https://www.python.org/), [git](https://git-scm.com/)
 The following commands clone the repository to your PC and build the executable.
 ```
 git clone https://github.com/andreasxp/leprechaun
@@ -13,8 +24,4 @@ pip install -e .
 pyinstaller freeze.spec
 deactivate
 ```
-The executable will be in the `dist` folder. To launch it at startup, create a shortcut to it in `%appdata%\Microsoft\Windows\Start Menu\Programs\Startup`.
-
-## Configuration
-To configure your wallet and other parameters, copy `leprechaun.yml` to your home directory (`C:/Users/<user>`). Open it (it's a text file), and input your wallet address.
-Leprechaun only reads configuration files from your home directory.
+The executable will be in the `dist` folder. To launch it at startup, create a scheduled task that launches it at user logon with administrative privileges.
