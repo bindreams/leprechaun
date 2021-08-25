@@ -17,11 +17,11 @@ def module_dir(module_name):
 
 
 a = Analysis(
-    ['lepricon/__main__.py'],
+    ['leprechaun/__main__.py'],
     pathex=[],
     binaries=[],
-    datas=[(module_dir("lepricon") + "/data", "lepricon/data")],
-    hiddenimports=[],
+    datas=[(module_dir("leprechaun") + "/data", "leprechaun/data")],
+    hiddenimports=["pywintypes"],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
@@ -44,7 +44,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='lepricon',
+    name='leprechaun',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

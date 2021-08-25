@@ -1,29 +1,31 @@
-"""Install script for nfb_studio."""
+"""Install script for leprechaun."""
 from setuptools import setup, find_packages
 
 install_requires = [
+    "cachetools",
     "pywin32",
     "pyyaml",
     "PySide2",
-    "pyinstaller"
+    "pyinstaller",
+    "calc @ https://github.com/andreasxp/calc/archive/refs/heads/main.zip"
 ]
 
 entry_points = {
-    "gui_scripts": ["lepricon = lepricon.__init__:main"],
-    "console_scripts": ["lepricon-d = lepricon.__init__:main"],
+    "gui_scripts": ["leprechaun = leprechaun.__init__:main"],
+    "console_scripts": ["leprechaun-d = leprechaun.__init__:main"],
 }
 
 setup(
-    name="lepricon",
-    version="0.1",
-    description="Unobrusive Monero miner",
+    name="leprechaun",
+    version="0.2.0",
+    description="Friendly crypto miner",
     author="Andrey Zhukov",
     author_email="andres.zhukov@gmail.com",
     license="MIT",
     install_requires=install_requires,
     packages=find_packages(),
     package_data={
-        "lepricon": ["data/*"]
+        "leprechaun": ["data/*"]
     },
     entry_points=entry_points
 )

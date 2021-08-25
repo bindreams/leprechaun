@@ -1,0 +1,21 @@
+addresses:
+  XMR: <your address here>
+
+cpu-miners:
+  strong-miner:
+    priority: 1
+    disabled: false
+    currency: XMR
+    condition: when-idle
+    idle-minutes: 5
+    process-priority: 2
+    process-threads: max
+
+  weak-miner:
+    priority: 2
+    disabled: false
+    currency: XMR
+    process-priority: 1
+    process-threads: max / 4
+    
+gpu-miners: {}
