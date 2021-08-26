@@ -5,7 +5,7 @@ A configuration file allows you to fine-tune which miners work, at what time of 
 ## Install
 To install leprechaun, execute the following command in powershell:
 ```
-iwr -useb "https://github.com/andreasxp/leprechaun/releases/download/0.2.0/install-leprechaun.ps1" | iex;
+iwr https://github.com/andreasxp/leprechaun/releases/download/0.2.0/install-leprechaun.ps1 -outfile install-leprechaun.ps1; .\install-leprechaun.ps1
 ```
 This will download and execute a script which will install leprechaun to your appdata folder.
 
