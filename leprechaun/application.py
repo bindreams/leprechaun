@@ -268,13 +268,15 @@ class Application(QObject, metaclass=ApplicationMetaclass):
             if value == "<your address here>":
                 raise InvalidConfigError(f"Placeholder address for '{currency}' currency")
         
-        for name, data in config["cpu-miners"].items():
+        cpuconfigs = config.get("cpu-miners", {})
+        for name, data in cpuconfigs.items():
             try:
                 self.cpuminers[name] = cpuminer(name, data, config)
             except InvalidConfigError as e:
                 raise InvalidConfigError(f"CPU miner '{name}': {e}") from None
-            
-        for name, data in config["gpu-miners"].items():
+        
+        gpuconfigs = config.get("gpu-miners", {})
+        for name, data in gpuconfigs.items():
             try:
                 self.gpuminers[name] = gpuminer(name, data, config)
             except InvalidConfigError as e:
