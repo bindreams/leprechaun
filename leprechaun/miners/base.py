@@ -37,7 +37,7 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
             self.address = addresses[self.currency]
         
         self.priority = data.get("priority", sys.maxsize)
-        self.enabled = not data.get("disabled", False)
+        self.enabled = data.get("enabled", True)
         
         try:
             self.condition = condition(data)
