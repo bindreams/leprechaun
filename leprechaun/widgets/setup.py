@@ -25,7 +25,7 @@ class Setup(QDialog):
         self.werrorlabel.setWordWrap(True)
         self.werrorlabel.setStyleSheet("QLabel {color: red;}")
 
-        self.wdocumentationlabel = QLabel("<a href=\"http://example.com/\">Config file documentation</a>")
+        self.wdocumentationlabel = QLabel("<a href=\"https://github.com/andreasxp/leprechaun#configuration\">Config file documentation</a>")
         self.wlabel.setTextFormat(Qt.RichText)
         self.wlabel.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.wlabel.setOpenExternalLinks(True)

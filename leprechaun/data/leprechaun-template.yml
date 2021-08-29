@@ -1,21 +1,44 @@
-addresses:
-  XMR: <your address here>
+# Leprechaun config file example
+# More info at https://github.com/andreasxp/leprechaun#configuration
 
+# Paste your addresses here
+addresses:
+  XMR: "<your address here>"
+  ETH: "<your address here>"
+
+# Configure your CPU miners here
+# You can specify as many miners as you want, but only one miner works at a
+# time. Leprechaun selects the first miner from the top, which is enabled and
+# whose condition is satisfied.
 cpu-miners:
-  strong-miner:
-    priority: 1
-    disabled: false
+  strong-xmr-miner:
+    # This is an example of an XMR miner, w
     currency: XMR
+    enabled: true
+    process-priority: 2  # CPU process priority, from 0 (lowest) to 5 (highest)
+    process-threads: max  # Use all threads
+    # Condition for working:
     condition: when-idle
     idle-minutes: 5
-    process-priority: 2
-    process-threads: max
 
-  weak-miner:
-    priority: 2
-    disabled: false
+  weak-xmr-miner:
     currency: XMR
+    enabled: true
     process-priority: 1
-    process-threads: max / 4
-    
-gpu-miners: {}
+    process-threads: max / 4  # use a quarter of available threads
+    # This miner has no conditions, so it is always ready to work
+
+# Configure your GPU miners here
+gpu-miners:
+  eth-miner:
+    currency: ETH
+    enabled: true
+    # This is an example of a complex condition. This miner will work on
+    # weekdays from 22:00 to 06:00, and on weekends all-day.
+    conditions-or:
+      - condition: on-schedule
+        days: [mon, tue, wed, thu, fri]
+        from-time: "22:00"
+        until-time: "06:00"
+      - condition: on-schedule
+        days: [sat, sun]
