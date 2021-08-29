@@ -160,12 +160,12 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         # Status -------------------------------------------------------------------------------------------------------
         if self.cpuactive:
             if self.gpuactive:
-                status = f"⛏️ {self.cpuactive} && {self.gpuactive}"
+                status = f"💎 {self.cpuactive} && {self.gpuactive}"
             else:
-                status = f"⛏️ {self.cpuactive}"
+                status = f"💎 {self.cpuactive}"
         else:
             if self.gpuactive:
-                status = f"⛏️ {self.gpuactive}"
+                status = f"💎 {self.gpuactive}"
             else:
                 status = "❌ No active miners"
 
@@ -215,7 +215,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         if self.gpuactive:
             self.gpuminers[self.gpuactive].stop()
 
-        self.system_icon_status.setText("💤 Mining paused")
+        self.system_icon_status.setText("⌛ Mining paused")
         self.menu_pause.menuAction().setVisible(False)
         self.action_resume.setVisible(True)
         self.system_icon.setIcon(self.icon_idle)
