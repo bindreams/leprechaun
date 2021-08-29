@@ -215,11 +215,11 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.gpuminers.loadconfig(config, "gpu")
 
     def exit(self, code=0):
-        if self.cpuactive:
-            self.cpuminers[self.cpuactive].stop()
+        if self.cpuminers.active:
+            self.cpuminers.active.stop()
         
-        if self.gpuactive:
-            self.gpuminers[self.gpuactive].stop()
+        if self.gpuminers.active:
+            self.gpuminers.active.stop()
 
         self.log("Exiting")
         self._fp_log.close()
