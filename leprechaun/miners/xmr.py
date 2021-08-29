@@ -2,7 +2,7 @@ import multiprocessing
 import subprocess as sp
 
 import leprechaun
-from leprechaun.base import InvalidConfigError, calc, download_and_unpack
+from leprechaun.base import InvalidConfigError, calc, download_and_extract
 from leprechaun.api.supportxmr import totaldue, totalpaid
 from .base import Miner
 
@@ -19,7 +19,7 @@ class XmrMiner(Miner):
         self.miner_dir = app.miners_dir / f"xmrig-{self.miner_version}"
         self.miner_exe = self.miner_dir / "xmrig.exe"
 
-        download_and_unpack(self.miner_url, self.miner_dir, nested=True)
+        download_and_extract(self.miner_url, self.miner_dir, remove_nested=True)
 
         # Configuration ------------------------------------------------------------------------------------------------
         # Process priority

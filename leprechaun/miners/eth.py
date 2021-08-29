@@ -1,7 +1,7 @@
 import subprocess as sp
 
 import leprechaun
-from leprechaun.base import InvalidConfigError, calc, download_and_unpack
+from leprechaun.base import InvalidConfigError, calc, download_and_extract
 from leprechaun.api.ethermine import totaldue, totalpaid
 from .base import Miner
 
@@ -18,7 +18,7 @@ class EthMiner(Miner):
         self.miner_dir = app.miners_dir / f"t-rex-{self.miner_version}"
         self.miner_exe = self.miner_dir / "t-rex.exe"
 
-        download_and_unpack(self.miner_url, self.miner_dir)
+        download_and_extract(self.miner_url, self.miner_dir)
 
         # Configuration ------------------------------------------------------------------------------------------------
         if sum(1 for field in ("fan-speed", "max-temp", "max-mem-temp") if field in data) > 1:
