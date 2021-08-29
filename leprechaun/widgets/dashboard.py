@@ -27,18 +27,17 @@ class Log(QTextEdit):
         super().closeEvent(event)
         self._registry.pop(id(self))
 
-class MinerList(QListWidget):
+class MinerStack(QListWidget):
     icon_none = None
     icon_green = None
     icon_red = None
     icon_disable = None
 
-    def __init__(self, miners, priorities):
+    def __init__(self, miners):
         super().__init__()
         self.miners = miners
-        self.priorities = priorities
 
-        for name in priorities:
+        for name in miners:
             self.addItem(name)
         
         self.setIconSize(QSize(rem()*1.5, rem()*1.5))
@@ -54,14 +53,15 @@ class MinerList(QListWidget):
     def sizeHint(self):
         return self.minimumSizeHint()
     
-    def update(self, active):
+    def update(self):
+        active_name = self.miners.active_name
         before_active = True
 
         for i in range(self.count()):
             item = self.item(i)
             name = item.text()
 
-            if name == active:
+            if name == active_name:
                 item.setIcon(self.icon_green)
                 before_active = False
             elif before_active:
@@ -103,8 +103,8 @@ class Dashboard(QWidget):
 
         # Miners
         app = leprechaun.Application()
-        self.wcpuminers = MinerList(app.cpuminers, app.cpupriorities)
-        self.wgpuminers = MinerList(app.gpuminers, app.gpupriorities)
+        self.wcpuminers = MinerStack(app.cpuminers)
+        self.wgpuminers = MinerStack(app.gpuminers)
 
         # Layout -------------------------------------------------------------------------------------------------------
         # Earnings
@@ -149,8 +149,8 @@ class Dashboard(QWidget):
     def update(self):
         app = leprechaun.Application()
 
-        self.wcpuminers.update(app.cpuactive)
-        self.wgpuminers.update(app.gpuactive)
+        self.wcpuminers.update()
+        self.wgpuminers.update()
 
         known_ids = set()
 

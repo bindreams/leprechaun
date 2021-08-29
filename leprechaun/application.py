@@ -13,8 +13,8 @@ from PySide2.QtWidgets import QApplication, QDialog, QSystemTrayIcon, QMenu
 import leprechaun as package
 from leprechaun import notepad
 from .base import InvalidConfigError
-from .miners import cpuminer, gpuminer
 from .widgets import Dashboard, ExceptionMessageBox, Setup
+from .miners import MinerStack
 
 
 class Singleton(type):
@@ -73,14 +73,10 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         #     QFontDatabase.addApplicationFont(str(path))
 
         # Miners -------------------------------------------------------------------------------------------------------
-        self.cpuminers = {}
-        self.gpuminers = {}
-
-        self.cpupriorities = []
-        self.gpupriorities = []
-
-        self.cpuactive = None
-        self.gpuactive = None
+        self.cpuminers = MinerStack()
+        self.gpuminers = MinerStack()
+        self.cpuminers.onchange = self.cpuMinerChanged.emit
+        self.gpuminers.onchange = self.gpuMinerChanged.emit
 
         self.heartbeat = QTimer()
         self.heartbeat.setInterval(5000)
@@ -123,49 +119,18 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         return qapp.exec_()
 
     def onHeartbeat(self):
-        # CPU miners ---------------------------------------------------------------------------------------------------
-        cpuactiveminer = self.cpuminers.get(self.cpuactive, None)
-        if cpuactiveminer is not None and not cpuactiveminer.running:
-            raise RuntimeError(f"Miner '{self.cpuactive}' stopped unexpectedly")
-
-        for minername in self.cpupriorities:
-            miner = self.cpuminers[minername]
-            if miner.enabled and miner.allowed:
-                if self.cpuactive is None or self.cpuactive != minername:
-                    if cpuactiveminer is not None:
-                        cpuactiveminer.stop()
-                    self.cpuactive = minername
-                    miner.start()
-                    self.cpuMinerChanged.emit(minername)
-
-                break
-
-        # GPU miners ---------------------------------------------------------------------------------------------------
-        gpuactiveminer = self.gpuminers.get(self.gpuactive, None)
-        if gpuactiveminer is not None and not gpuactiveminer.running:
-            raise RuntimeError(f"Miner '{self.gpuactive}' stopped unexpectedly")
-
-        for minername in self.gpupriorities:
-            miner = self.gpuminers[minername]
-            if miner.allowed and miner.enabled:
-                if self.gpuactive is None or self.gpuactive != minername:
-                    if gpuactiveminer is not None:
-                        gpuactiveminer.stop()
-                    self.gpuactive = minername
-                    miner.start()
-                    self.gpuMinerChanged.emit(minername)
-                    
-                break
+        self.cpuminers.update()
+        self.gpuminers.update()
         
         # Status -------------------------------------------------------------------------------------------------------
-        if self.cpuactive:
-            if self.gpuactive:
-                status = f"💎 {self.cpuactive} && {self.gpuactive}"
+        if self.cpuminers.active:
+            if self.gpuminers.active:
+                status = f"💎 {self.cpuminers.active.name} && {self.gpuminers.active.name}"
             else:
-                status = f"💎 {self.cpuactive}"
+                status = f"💎 {self.cpuminers.active.name}"
         else:
-            if self.gpuactive:
-                status = f"💎 {self.gpuactive}"
+            if self.gpuminers.active:
+                status = f"💎 {self.gpuminers.active.name}"
             else:
                 status = "❌ No active miners"
 
@@ -209,11 +174,11 @@ class Application(QObject, metaclass=ApplicationMetaclass):
     def actionPauseMining(self, duration):
         self.log("Mining paused for {duration}s")
 
-        if self.cpuactive:
-            self.cpuminers[self.cpuactive].stop()
+        if self.cpuminers.active:
+            self.cpuminers.active.stop()
         
-        if self.gpuactive:
-            self.gpuminers[self.gpuactive].stop()
+        if self.gpuminers.active:
+            self.gpuminers.active.stop()
 
         self.system_icon_status.setText("⌛ Mining paused")
         self.menu_pause.menuAction().setVisible(False)
@@ -241,30 +206,13 @@ class Application(QObject, metaclass=ApplicationMetaclass):
             config_text = f.read()
         config = yaml.safe_load(config_text)
 
-        self.cpuminers = {}
-        self.gpuminers = {}
-
         addresses = config["addresses"]
         for currency, value in addresses.items():
             if value == "<your address here>":
                 raise InvalidConfigError(f"Placeholder address for '{currency}' currency")
         
-        cpuconfigs = config.get("cpu-miners", {})
-        for name, data in cpuconfigs.items():
-            try:
-                self.cpuminers[name] = cpuminer(name, data, config)
-            except InvalidConfigError as e:
-                raise InvalidConfigError(f"CPU miner '{name}': {e}") from None
-        
-        gpuconfigs = config.get("gpu-miners", {})
-        for name, data in gpuconfigs.items():
-            try:
-                self.gpuminers[name] = gpuminer(name, data, config)
-            except InvalidConfigError as e:
-                raise InvalidConfigError(f"GPU miner '{name}': {e}") from None
-        
-        self.cpupriorities = sorted(self.cpuminers, key=lambda x: self.cpuminers[x].priority)
-        self.gpupriorities = sorted(self.gpuminers, key=lambda x: self.gpuminers[x].priority)
+        self.cpuminers.loadconfig(config, "cpu")
+        self.gpuminers.loadconfig(config, "gpu")
 
     def exit(self, code=0):
         if self.cpuactive:
