@@ -8,12 +8,13 @@ import yaml
 from yaml.parser import ParserError as YamlParserError
 from PySide2.QtCore import QObject, QStandardPaths, QTimer, Signal
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QApplication, QDialog, QStyleFactory, QSystemTrayIcon, QMenu
+from PySide2.QtWidgets import QApplication, QDialog, QSystemTrayIcon, QMenu
 
 import leprechaun as package
-from .base import InvalidConfigError, download_and_unpack
+from leprechaun import notepad
+from .base import InvalidConfigError
 from .miners import cpuminer, gpuminer
-from .widgets import MonacoEditor, Dashboard, ConfigFixDialog, ExceptionMessageBox
+from .widgets import Dashboard, ExceptionMessageBox, Setup
 
 
 class Singleton(type):
@@ -54,22 +55,18 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.miners_dir = self.data_dir / "miners"
         self.miners_dir.mkdir(exist_ok=True)
 
-        self.temp_dir = Path(QStandardPaths.writableLocation(QStandardPaths.TempLocation)) / "leprechaun"
-        self.temp_dir.mkdir(parents=True, exist_ok=True)
+        self.notepad_dir = self.data_dir / "notepad"
+
+        self.config_path = Path.home() / "leprechaun.yml"
 
         # Logs
         self._fp_log = open(self.data_dir / "log.txt", "a", encoding="utf-8")
         self.log("Initializing")
 
-        # Monaco editor ------------------------------------------------------------------------------------------------
-        monaco_editor_version = "0.27.0"
-        monaco_editor_filename = f"monaco-editor-{monaco_editor_version}"
-        monaco_editor_url = f"https://registry.npmjs.org/monaco-editor/-/{monaco_editor_filename}.tgz"
-        monaco_editor_path = self.data_dir / monaco_editor_filename
-        MonacoEditor.index_html = monaco_editor_path / "index.html"
-        if not monaco_editor_path.exists():
-            download_and_unpack(monaco_editor_url, monaco_editor_path)
-            shutil.copy(package.dir / "data" / "monaco-editor.html", MonacoEditor.index_html)
+        # Notepad for config editing -----------------------------------------------------------------------------------
+        if not self.notepad_dir.exists():
+            self.notepad_dir.mkdir()
+            notepad.download(self.notepad_dir)
 
         # # Fonts
         # for path in (package.dir / "data" / "fonts").rglob("*.ttf"):
@@ -180,44 +177,21 @@ class Application(QObject, metaclass=ApplicationMetaclass):
 
     def actionLaunch(self):
         """User-facing action triggered on program launch."""
-        config_changed = False
-
         try:
-            with open(Path.home() / "leprechaun.yml", encoding="utf-8") as f:
-                config_text = f.read()
+            self.loadconfig()
         except FileNotFoundError:
-            shutil.copy(package.dir / "data" / "leprechaun-template.yml", Path("~/leprechaun.yml").expanduser())
-            
-            with open(Path.home() / "leprechaun.yml", encoding="utf-8") as f:
-                config_text = f.read()
-            dialog = ConfigFixDialog.Setup(config_text)
+            shutil.copy(package.dir / "data" / "leprechaun-template.yml", self.config_path)
+        
+            dialog = Setup(Setup.welcome_message)
             if dialog.exec_() == QDialog.Rejected:
                 QApplication.instance().exit()
                 return
-
-            config_text = dialog.weditor.text()
-            config_changed = True
-
-        while True:
-            try:
-                config = yaml.safe_load(config_text)
-                self.loadconfig(config)
-            except (YamlParserError, InvalidConfigError) as e:
-                dialog = ConfigFixDialog.ConfigError(config_text, str(e))
-                status = dialog.exec_()
-                if status == QDialog.Rejected:
-                    QApplication.instance().exit()
-                    return
-
-                config_text = dialog.weditor.text()
-                config_changed = True
-            else:
-                break
-
-        # Success, write new config to file
-        if config_changed:
-            with open(Path.home() / "leprechaun.yml", "w", encoding="utf-8") as f:
-                f.write(config_text)
+        except (YamlParserError, InvalidConfigError) as e:
+            dialog = Setup("There has been an error loading the configuration file.")
+            dialog.werrorlabel.setText(str(e))
+            if dialog.exec_() == QDialog.Rejected:
+                QApplication.instance().exit()
+                return
         
         self.system_icon.show()
         self.heartbeat.start()
@@ -259,7 +233,14 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.heartbeat.start()
         self.onHeartbeat()
 
-    def loadconfig(self, config):
+    def actionEditConfig(self):
+        notepad.launch(self.notepad_dir, self.config_path)
+
+    def loadconfig(self):
+        with open(self.config_path, encoding="utf-8") as f:
+            config_text = f.read()
+        config = yaml.safe_load(config_text)
+
         self.cpuminers = {}
         self.gpuminers = {}
 
