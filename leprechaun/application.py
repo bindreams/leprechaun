@@ -172,7 +172,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.dashboard.activateWindow()
     
     def actionPauseMining(self, duration):
-        self.log("Mining paused for {duration}s")
+        self.log(f"Mining paused for {duration}s")
 
         if self.cpuminers.active:
             self.cpuminers.active.stop()
