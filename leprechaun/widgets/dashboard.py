@@ -16,6 +16,7 @@ class Log(QTextEdit):
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.setFontFamily("Consolas")
+        self.setWordWrapMode(self.NoWrap)
         self.setReadOnly(True)
         self.setText("\n".join(miner.log))
         miner.logUpdated.connect(self.append)
@@ -23,9 +24,19 @@ class Log(QTextEdit):
         # Add self to a registry to not get accidentally deleted
         self._registry[id(self)] = self
     
+    def append(self, text: str):
+        scrollbar = self.verticalScrollBar()
+        at_bottom = scrollbar.value() == scrollbar.maximum()
+
+        super().append(text)
+
+        if at_bottom:
+            scrollbar.setValue(scrollbar.maximum())
+
     def closeEvent(self, event):
         super().closeEvent(event)
         self._registry.pop(id(self))
+
 
 class MinerStack(QListWidget):
     icon_none = None
