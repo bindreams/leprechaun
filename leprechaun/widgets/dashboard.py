@@ -16,7 +16,7 @@ class Log(QTextEdit):
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.setFontFamily("Consolas")
-        self.setWordWrapMode(self.NoWrap)
+        self.setLineWrapMode(QTextEdit.NoWrap)
         self.setReadOnly(True)
         self.setText("\n".join(miner.log))
         miner.logUpdated.connect(self.append)
