@@ -3,6 +3,7 @@ import traceback
 from pathlib import Path
 from datetime import datetime
 import shutil
+import atexit
 
 import yaml
 from yaml.parser import ParserError as YamlParserError
@@ -50,17 +51,19 @@ class Application(QObject, metaclass=ApplicationMetaclass):
 
         # Folders and logs ---------------------------------------------------------------------------------------------
         self.data_dir = Path(QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation))
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.data_dir.mkdir(exist_ok=True)
 
         self.miners_dir = self.data_dir / "miners"
         self.miners_dir.mkdir(exist_ok=True)
 
         self.notepad_dir = self.data_dir / "notepad"
-
         self.config_path = Path.home() / "leprechaun.yml"
+        self.crashes_dir = self.data_dir / "miner crashes"
+        self.crashes_dir.mkdir(exist_ok=True)
 
         # Logs
-        self._fp_log = open(self.data_dir / "log.txt", "a", encoding="utf-8")
+        self._fp_log = open(self.data_dir / "log.txt", "a", encoding="utf-8", buffering=1)
+        atexit.register(self._fp_log.close)
         self.log("Initializing")
 
         # Notepad for config editing -----------------------------------------------------------------------------------
@@ -222,20 +225,26 @@ class Application(QObject, metaclass=ApplicationMetaclass):
             self.gpuminers.active.stop()
 
         self.log("Exiting")
-        self._fp_log.close()
         QApplication.instance().exit(code)
 
-    def log(self, line):
-        time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self._fp_log.write(f"[{time}] {line}\n")
+    def log(self, *args):
+        timestamp = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
+        padding = " " * len(timestamp)
+        prefix = timestamp
+
+        for arg in args:
+            if isinstance(arg, BaseException):
+                external_lines = traceback.format_exception(None, arg, arg.__traceback__)
+                lines = (line for line in external_line[:-1].splitlines() for external_line in external_lines)
+            else:
+                lines = str(arg).splitlines()
+        
+            for line in lines:
+                self._fp_log.write(f"{prefix}{line}\n")
+                prefix = padding
 
     def excepthook(self, etype, value, tb):        
-        self.log("Exception occured!")
-        for line in traceback.format_exception(None, value, value.__traceback__):
-            internal_lines = line[:-1].split("\n")
-            for internal_line in internal_lines:
-                self.log(internal_line)
-        
+        self.log("Fatal exception raised:", value)
         wmessage = ExceptionMessageBox(value)
         wmessage.exec_()
 

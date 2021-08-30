@@ -144,33 +144,40 @@ class Dashboard(QWidget):
 
         known_ids = set()
 
+        self.wtotal.setText("$--.--")
+        self.wpending.setText("$--.--")
+
         etotal = 0
         epending = 0
 
         for miner in chain(app.cpuminers.values(), app.gpuminers.values()):
-            earnings = miner.earnings()
-            currency = miner.currency
-            price = usdprice(currency)
+            try:
+                earnings = miner.earnings()
+                currency = miner.currency
+                price = usdprice(currency)
 
-            if earnings["scope"] == "currency":
-                earnings_id = f"__{currency}"
+                if earnings["scope"] == "currency":
+                    earnings_id = f"__{currency}"
 
-            if earnings["scope"] == "address":
-                earnings_id = f"__{currency}_{miner.address}"
+                if earnings["scope"] == "address":
+                    earnings_id = f"__{currency}_{miner.address}"
 
-            if earnings["scope"] == "with-id":
-                earnings_id = earnings["id"]
-            
-            if earnings_id in known_ids:
-                continue
-            
-            known_ids.add(earnings_id)
+                if earnings["scope"] == "with-id":
+                    earnings_id = earnings["id"]
+                
+                if earnings_id in known_ids:
+                    continue
+                
+                known_ids.add(earnings_id)
 
-            etotal += earnings["total"] * price
-            epending += earnings["pending"] * price
+                etotal += earnings["total"] * price
+                epending += earnings["pending"] * price
+            except OSError as e:
+                app.log(f"Exception raised while getting earnings of miner '{miner.name}':", e)
+                return  # Skip setting earnings
         
-        self.wtotal.setText(f" $ {etotal:.2f} ")
-        self.wpending.setText(f" $ {epending:.2f} ")
+        self.wtotal.setText(f"${etotal:,.2f}")
+        self.wpending.setText(f"${epending:,.2f}")
     
     def closeEvent(self, event):
         super().closeEvent(event)
