@@ -234,7 +234,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         for arg in args:
             if isinstance(arg, BaseException):
                 external_lines = traceback.format_exception(None, arg, arg.__traceback__)
-                lines = (line for line in external_line[:-1].splitlines() for external_line in external_lines)
+                lines = (line for external_line in external_lines for line in external_line[:-1].splitlines())
             else:
                 lines = str(arg).splitlines()
         
