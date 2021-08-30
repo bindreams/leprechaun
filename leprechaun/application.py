@@ -44,7 +44,6 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         # General application information ------------------------------------------------------------------------------
         qapp = QApplication(sys.argv)
         qapp.setQuitOnLastWindowClosed(False)
-        #qapp.setStyle(QStyleFactory.create("fusion"))
         qapp.setApplicationName("leprechaun")
         qapp.setApplicationDisplayName("Leprechaun Miner")
         qapp.setWindowIcon(QIcon(str(package.dir / "data" / "icon.png")))
@@ -128,14 +127,14 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         # Status -------------------------------------------------------------------------------------------------------
         if self.cpuminers.active:
             if self.gpuminers.active:
-                status = f"💎 {self.cpuminers.active.name} && {self.gpuminers.active.name}"
+                status = f"{self.cpuminers.active.name} && {self.gpuminers.active.name}"
             else:
-                status = f"💎 {self.cpuminers.active.name}"
+                status = f"{self.cpuminers.active.name}"
         else:
             if self.gpuminers.active:
-                status = f"💎 {self.gpuminers.active.name}"
+                status = f"{self.gpuminers.active.name}"
             else:
-                status = "❌ No active miners"
+                status = "No active miners"
 
         self.system_icon_status.setText(status)
 
@@ -183,7 +182,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         if self.gpuminers.active:
             self.gpuminers.active.stop()
 
-        self.system_icon_status.setText("⌛ Mining paused")
+        self.system_icon_status.setText("Mining paused")
         self.menu_pause.menuAction().setVisible(False)
         self.action_resume.setVisible(True)
         self.system_icon.setIcon(self.icon_idle)
