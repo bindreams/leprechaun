@@ -1,10 +1,10 @@
 from itertools import chain
 from PySide2.QtCore import Qt, Signal, QSize
-from PySide2.QtGui import QIcon, QBrush, QColor
-from PySide2.QtWidgets import QApplication, QGridLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QTextEdit, QFrame, QListWidget, QSizePolicy
-import leprechaun
-from .base import defaultfont, font, rem, rempt
+from PySide2.QtGui import QIcon
+from PySide2.QtWidgets import QGridLayout, QLabel, QWidget, QTextEdit, QFrame, QListWidget
+import leprechaun as le
 from leprechaun.api.messari import usdprice
+from .base import font, rem, rempt
 
 
 class Log(QTextEdit):
@@ -56,10 +56,10 @@ class MinerStack(QListWidget):
 
         cls = type(self)
         if cls.icon_none is None:
-            cls.icon_none = QIcon(str(leprechaun.dir / "data" / "status-none.svg"))
-            cls.icon_green = QIcon(str(leprechaun.dir / "data" / "status-green.svg"))
-            cls.icon_red = QIcon(str(leprechaun.dir / "data" / "status-red.svg"))
-            cls.icon_disable = QIcon(str(leprechaun.dir / "data" / "status-disable.svg"))
+            cls.icon_none = QIcon(str(le.dir / "data" / "status-none.svg"))
+            cls.icon_green = QIcon(str(le.dir / "data" / "status-green.svg"))
+            cls.icon_red = QIcon(str(le.dir / "data" / "status-red.svg"))
+            cls.icon_disable = QIcon(str(le.dir / "data" / "status-disable.svg"))
     
     def sizeHint(self):
         return self.minimumSizeHint()
@@ -75,10 +75,10 @@ class MinerStack(QListWidget):
             if name == active_name:
                 item.setIcon(self.icon_green)
                 before_active = False
-            elif before_active:
-                item.setIcon(self.icon_red)
             elif not self.miners[name].enabled:
                 item.setIcon(self.icon_disable)
+            elif before_active:
+                item.setIcon(self.icon_red)
             else:
                 item.setIcon(self.icon_none)
 
@@ -109,46 +109,26 @@ class Dashboard(QWidget):
         self.wpending.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
         # Miners
-        app = leprechaun.Application()
+        app = le.Application()
         self.wcpuminers = MinerStack(app.cpuminers)
         self.wgpuminers = MinerStack(app.gpuminers)
 
         # Layout -------------------------------------------------------------------------------------------------------
-        # Earnings
-        lyearnings = QHBoxLayout()
-        lyearnings.setSpacing(2*rem())
-        
-        lytemp = QVBoxLayout()
-        lytemp.setSpacing(0.5*rem())
-        lytemp.addWidget(QLabel("Total earnings:"))
-        lytemp.addWidget(self.wtotal)
-        lyearnings.addLayout(lytemp)
-
-        lytemp = QVBoxLayout()
-        lytemp.setSpacing(0.5*rem())
-        lytemp.addWidget(QLabel("Pending:"))
-        lytemp.addWidget(self.wpending)
-        lyearnings.addLayout(lytemp)
-
-        lyearnings.insertStretch(0, 1)
-        lyearnings.insertStretch(-1, 1)
-
-        # Miners
-        lyminers = QGridLayout()
-        lyminers.addWidget(QLabel("CPU Miners:"), 0, 0)
-        lyminers.addWidget(QLabel("GPU Miners:"), 0, 1)
-        lyminers.addWidget(self.wcpuminers, 1, 0)
-        lyminers.addWidget(self.wgpuminers, 1, 1)
-
-        # Layout -------------------------------------------------------------------------------------------------------
-        ly = QVBoxLayout()
+        ly = QGridLayout()
         self.setLayout(ly)
 
-        ly.addLayout(lyearnings)
-        ly.addLayout(lyminers)
+        ly.addWidget(QLabel("Total earnings:"), 0, 0)
+        ly.addWidget(QLabel("Pending:"), 0, 1)
+        ly.addWidget(self.wtotal, 1, 0)
+        ly.addWidget(self.wpending, 1, 1)
+
+        ly.addWidget(QLabel("CPU Miners:"), 2, 0)
+        ly.addWidget(QLabel("GPU Miners:"), 2, 1)
+        ly.addWidget(self.wcpuminers, 3, 0)
+        ly.addWidget(self.wgpuminers, 3, 1)
     
     def update(self):
-        app = leprechaun.Application()
+        app = le.Application()
 
         self.wcpuminers.update()
         self.wgpuminers.update()
@@ -193,5 +173,5 @@ class Dashboard(QWidget):
     def closeEvent(self, event):
         super().closeEvent(event)
         self.deleteLater()
-        app = leprechaun.Application()
+        app = le.Application()
         app.dashboard = None
