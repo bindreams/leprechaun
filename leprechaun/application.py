@@ -7,7 +7,7 @@ import shutil
 import yaml
 from yaml.parser import ParserError as YamlParserError
 from PySide2.QtCore import QObject, QStandardPaths, QTimer, Signal
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import QIcon, QFontDatabase
 from PySide2.QtWidgets import QApplication, QDialog, QSystemTrayIcon, QMenu
 
 import leprechaun as package
@@ -68,9 +68,9 @@ class Application(QObject, metaclass=ApplicationMetaclass):
             self.notepad_dir.mkdir()
             notepad.download(self.notepad_dir)
 
-        # # Fonts
-        # for path in (package.dir / "data" / "fonts").rglob("*.ttf"):
-        #     QFontDatabase.addApplicationFont(str(path))
+        # Fonts
+        for path in (package.dir / "data" / "fonts").rglob("*.ttf"):
+            QFontDatabase.addApplicationFont(str(path))
 
         # Miners -------------------------------------------------------------------------------------------------------
         self.cpuminers = MinerStack()

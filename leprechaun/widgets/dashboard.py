@@ -83,22 +83,18 @@ class Dashboard(QWidget):
     def __init__(self):
         super().__init__()
 
-        moneyfont = defaultfont()
-        moneyfont.setPointSizeF(2.3*rempt())
+        moneyfont = font("Open Sans", size=2.25*rempt())
 
         self.wtotal = QLabel()
+        self.wtotal.setStyleSheet("padding: 0 0.5em 0 0.5em")
         self.wtotal.setFont(moneyfont)
-        self.wtotal.setAlignment(Qt.AlignHCenter)
+        self.wtotal.setAlignment(Qt.AlignCenter)
         self.wtotal.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
-        # self.wtotal24h = QLabel()
-        # self.wtotal24h.setFont(moneyfont)
-        # self.wtotal24h.setAlignment(Qt.AlignHCenter)
-        # self.wtotal24h.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-
         self.wpending = QLabel()
+        self.wpending.setStyleSheet("padding: 0 0.5em 0 0.5em")
         self.wpending.setFont(moneyfont)
-        self.wpending.setAlignment(Qt.AlignHCenter)
+        self.wpending.setAlignment(Qt.AlignCenter)
         self.wpending.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
         # Miners
@@ -116,12 +112,6 @@ class Dashboard(QWidget):
         lytemp.addWidget(QLabel("Total earnings:"))
         lytemp.addWidget(self.wtotal)
         lyearnings.addLayout(lytemp)
-
-        # lytemp = QVBoxLayout()
-        # lytemp.setSpacing(0.5*rem())
-        # lytemp.addWidget(QLabel("Last 24 H:"))
-        # lytemp.addWidget(self.wtotal24h)
-        # lyearnings.addLayout(lytemp)
 
         lytemp = QVBoxLayout()
         lytemp.setSpacing(0.5*rem())
