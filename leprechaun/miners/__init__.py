@@ -1,5 +1,7 @@
 from collections.abc import MutableMapping
 from typing import Union
+from datetime import datetime
+import leprechaun as le
 from leprechaun.base import InvalidConfigError
 from .xmr import XmrMiner
 from .eth import EthMiner
@@ -38,6 +40,12 @@ class MinerStack(MutableMapping):
         active = self.active
 
         if active is not None and not active.running:
+            app = le.Application()
+            log_path = app.crashes_dir / f"{datetime.now().isoformat()} {active.name}.txt"
+            with open(log_path, "w", encoding="utf-8") as f:
+                for line in active.log:
+                    f.write(line)
+            
             raise RuntimeError(f"Miner '{active.name}' stopped unexpectedly")
 
         for name, miner in self.items():
