@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from functools import reduce
 import operator
 import win32api
@@ -82,7 +82,7 @@ class ScheduleCondition(Condition):
             return from_datetime <= now < until_datetime
         
         todaybegin = datetime.combine(today, time.min)
-        tomorrowbegin = datetime.combine(today + 1, time.min)
+        tomorrowbegin = datetime.combine(today + timedelta(days=1), time.min)
 
         return todaybegin <= now < until_datetime or from_datetime <= now < tomorrowbegin
 
@@ -91,21 +91,28 @@ class AndCondition(Condition):
     def __init__(self, data):
         self.components = []
 
-        for entry in data:
+        try:
+            condition_data = data["conditions"]
+        except KeyError:
+            condition_data = data["conditions-and"]
+
+        for entry in condition_data:
             cond = condition(entry)
             self.components.append(cond)
     
     def __bool__(self):
-        return reduce(operator.and_, self.components, True)
+        return reduce(operator.and_, (bool(component) for component in self.components), True)
 
 
 class OrCondition(Condition):
     def __init__(self, data):
         self.components = []
 
-        for entry in data:
+        condition_data = data["conditions-or"]
+
+        for entry in condition_data:
             cond = condition(entry)
             self.components.append(cond)
     
     def __bool__(self):
-        return reduce(operator.or_, self.components, False)
+        return reduce(operator.or_, (bool(component) for component in self.components), False)
