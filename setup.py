@@ -11,8 +11,8 @@ install_requires = [
 ]
 
 entry_points = {
-    "gui_scripts": ["leprechaun = leprechaun.__init__:main"],
-    "console_scripts": ["leprechaun-d = leprechaun.__init__:main"],
+    "gui_scripts": ["leprechaun = leprechaun.__main__:main"],
+    "console_scripts": ["leprechaun-cli = leprechaun_cli:main"],
 }
 
 setup(
@@ -23,7 +23,10 @@ setup(
     author_email="andres.zhukov@gmail.com",
     license="MIT",
     install_requires=install_requires,
-    packages=find_packages(),
+    packages=find_packages(include=[
+        "leprechaun",
+        "leprechaun.*"
+    ]),
     package_data={
         "leprechaun": ["data/*"]
     },
