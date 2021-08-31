@@ -104,5 +104,4 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         The `total` and `pending` values need to be in miner's currency.
 
         Note: all miners for one currency should return the same value for `scope`.
-        Note: `id` field should not start with two underscores.
         """

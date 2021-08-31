@@ -148,10 +148,10 @@ class Dashboard(QWidget):
                 price = usdprice(currency)
 
                 if earnings["scope"] == "currency":
-                    earnings_id = f"__{currency}"
+                    earnings_id = (currency,)
 
                 if earnings["scope"] == "address":
-                    earnings_id = f"__{currency}_{miner.address}"
+                    earnings_id = (currency, miner.address)
 
                 if earnings["scope"] == "with-id":
                     earnings_id = earnings["id"]
