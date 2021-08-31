@@ -84,7 +84,7 @@ def add_shortcuts():
         path = Path(sys.argv[0]).parent / "leprechaun.exe"
         set_args = ""
     
-    sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)])
+    sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)], check=True)
 
 def add_scheduled_task():
     script = """
@@ -105,11 +105,11 @@ def add_scheduled_task():
         exe = f"-Execute '{path}'"
         args = ""
 
-    sp.run(["powershell.exe", "-Command", script.format(exe=exe, args=args)])
+    sp.run(["powershell.exe", "-Command", script.format(exe=exe, args=args)], check=True)
 
 def add_security_exception():
     script = f"Add-MpPreference -ExclusionPath {le.data_dir}"
-    sp.run(["powershell.exe", "-Command", script])
+    sp.run(["powershell.exe", "-Command", script], check=True)
 
 def main():
     """Run Leprechaun."""
