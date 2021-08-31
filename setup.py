@@ -17,7 +17,7 @@ entry_points = {
 
 setup(
     name="leprechaun",
-    version="0.2.0",
+    version="0.3.0",
     description="Friendly crypto miner",
     author="Andrey Zhukov",
     author_email="andres.zhukov@gmail.com",
