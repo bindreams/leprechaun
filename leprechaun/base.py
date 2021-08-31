@@ -87,10 +87,6 @@ def download(url, filename, callback=None):
                     callback(completed / length)
 
 _formats = {name: extensions for name, extensions, _ in shutil.get_unpack_formats()}
-_extensions = {}
-for format, extensions in _formats.items():
-    for extension in extensions:
-        _extensions[extension] = format
 
 def extract(src, dest, callback=None, *, format=None, if_exists=False, remove_nested=False):
     """Download a zip or tar archive and extract it into a specified folder.
@@ -103,14 +99,20 @@ def extract(src, dest, callback=None, *, format=None, if_exists=False, remove_ne
         return
 
     # Determine format -------------------------------------------------------------------------------------------------
-    format = format or _extensions.get("".join(src.suffixes), None)
-    if format is None:
-        extension = "".join(src.suffixes)
+    suffix = "".join(src.suffixes)
+    format = None
 
-        try:
-            format = _extensions[extension]
-        except KeyError:
-            raise ValueError(f"Could not determine archive format from extension '{extension}'") from None
+    for format_check, extensions in _formats.items():
+        for extension in extensions:
+            if suffix.endswith(extension):
+                format = format_check
+                break
+        
+        if format is not None:
+            break
+
+    if format is None:
+        raise ValueError(f"Could not determine archive format from filename '{src.name}'")
     
     # Extract functions ------------------------------------------------------------------------------------------------
     def extract_tar(dest):
@@ -150,6 +152,7 @@ def extract(src, dest, callback=None, *, format=None, if_exists=False, remove_ne
     if remove_nested:
         # Handle nested directory
         with TemporaryDirectory() as tempdir:
+            tempdir = Path(tempdir)
             extract(tempdir)
             files = list(tempdir.glob("*"))
 
