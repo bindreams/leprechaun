@@ -8,6 +8,7 @@ currency_precision = 12
 def stats(addr):
     url = f"https://supportxmr.com/api/miner/{addr}/stats"
     page = rq.get(url)
+    page.raise_for_status()
     data = page.json()
 
     return data

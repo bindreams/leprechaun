@@ -1,4 +1,4 @@
-import traceback
+import better_exceptions
 from PySide2.QtWidgets import QMessageBox, QTextEdit
 from .base import rem
 
@@ -16,7 +16,7 @@ class ExceptionMessageBox(QMessageBox):
         self.setIcon(self.Icon.Critical)
 
         exception_field = QTextEdit()
-        exception_field.setText("".join(traceback.format_exception(None, exception, exception.__traceback__)))
+        exception_field.setText("".join(better_exceptions.format_exception(None, exception, exception.__traceback__)))
         exception_field.setReadOnly(True)
         self.layout().addWidget(exception_field, 1, 0, 1, -1)
 

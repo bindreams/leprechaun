@@ -8,6 +8,7 @@ currency_precision = 18
 def request(page, addr):
     url = f"https://api.ethermine.org/miner/{addr[2:]}/{page}"
     page = rq.get(url)
+    page.raise_for_status()
     data = page.json()
 
     if data["status"] != "OK":

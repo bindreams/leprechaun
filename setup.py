@@ -7,6 +7,7 @@ install_requires = [
     "pyyaml",
     "PySide2",
     "pyinstaller",
+    "better_exceptions"
     "calc @ https://github.com/andreasxp/calc/archive/refs/heads/main.zip"
 ]
 

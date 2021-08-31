@@ -9,6 +9,7 @@ def rawassetprices(page=1):
     """Return a page of 500 asset prices. Switch page to get more results."""
     url = f"https://data.messari.io/api/v2/assets?fields=symbol,metrics/market_data/price_usd&limit=500&page={page}"
     page = rq.get(url)
+    page.raise_for_status()
     data = page.json()
 
     if "status" not in data:
