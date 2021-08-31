@@ -7,11 +7,11 @@ import atexit
 
 import yaml
 from yaml.parser import ParserError as YamlParserError
-from PySide2.QtCore import QObject, QStandardPaths, QTimer, Signal
+from PySide2.QtCore import QObject, QTimer, Signal
 from PySide2.QtGui import QIcon, QFontDatabase
 from PySide2.QtWidgets import QApplication, QDialog, QSystemTrayIcon, QMenu
 
-import leprechaun as package
+import leprechaun as le
 from leprechaun import notepad
 from .base import InvalidConfigError
 from .widgets import Dashboard, ExceptionMessageBox, Setup
@@ -34,44 +34,39 @@ class Application(QObject, metaclass=ApplicationMetaclass):
     cpuMinerChanged = Signal(str)
     gpuMinerChanged = Signal(str)
 
-    def __init__(self):
+    def __init__(self, config_path=None):
         super().__init__()
         
         # Exception catching -------------------------------------------------------------------------------------------
         self.__excepthook__ = sys.excepthook
         sys.excepthook = self.excepthook
 
-        # General application information ------------------------------------------------------------------------------
+        # Folders and logs ---------------------------------------------------------------------------------------------
+        le.data_dir.mkdir(exist_ok=True)
+        le.miners_dir.mkdir(exist_ok=True)
+        le.miner_crashes_dir.mkdir(exist_ok=True)
+
+        # Logs
+        self._fp_log = open(le.data_dir / "log.txt", "a", encoding="utf-8", buffering=1)
+        self.log("Initializing")
+        atexit.register(self._fp_log.close)
+
+        self.config_path = Path(config_path)
+
+        # Qt Application -----------------------------------------------------------------------------------------------
         qapp = QApplication(sys.argv)
         qapp.setQuitOnLastWindowClosed(False)
         qapp.setApplicationName("leprechaun")
         qapp.setApplicationDisplayName("Leprechaun Miner")
-        qapp.setWindowIcon(QIcon(str(package.dir / "data" / "icon.png")))
-
-        # Folders and logs ---------------------------------------------------------------------------------------------
-        self.data_dir = Path(QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation))
-        self.data_dir.mkdir(exist_ok=True)
-
-        self.miners_dir = self.data_dir / "miners"
-        self.miners_dir.mkdir(exist_ok=True)
-
-        self.notepad_dir = self.data_dir / "notepad"
-        self.config_path = Path.home() / "leprechaun.yml"
-        self.crashes_dir = self.data_dir / "miner crashes"
-        self.crashes_dir.mkdir(exist_ok=True)
-
-        # Logs
-        self._fp_log = open(self.data_dir / "log.txt", "a", encoding="utf-8", buffering=1)
-        atexit.register(self._fp_log.close)
-        self.log("Initializing")
+        qapp.setWindowIcon(QIcon(str(le.sdata_dir / "icon.png")))
 
         # Notepad for config editing -----------------------------------------------------------------------------------
-        if not self.notepad_dir.exists():
-            self.notepad_dir.mkdir()
-            notepad.download(self.notepad_dir)
+        if not le.notepad_dir.exists():
+            le.notepad_dir.mkdir()
+            notepad.download(le.notepad_dir)
 
         # Fonts
-        for path in (package.dir / "data" / "fonts").rglob("*.ttf"):
+        for path in (le.sdata_dir / "fonts").rglob("*.ttf"):
             QFontDatabase.addApplicationFont(str(path))
 
         # Miners -------------------------------------------------------------------------------------------------------
@@ -89,8 +84,8 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         """Created and deleted on request to conserve memory."""
 
         # System tray icon ---------------------------------------------------------------------------------------------
-        self.icon_active = QIcon(str(package.dir / "data" / "icon.png"))
-        self.icon_idle = QIcon(str(package.dir / "data" / "icon-idle.png"))
+        self.icon_active = QIcon(str(le.sdata_dir / "icon.png"))
+        self.icon_idle = QIcon(str(le.sdata_dir / "icon-idle.png"))
 
         self.system_icon = QSystemTrayIcon(self.icon_active)
         self.system_icon_menu = QMenu()
@@ -147,7 +142,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         try:
             self.loadconfig()
         except FileNotFoundError:
-            shutil.copy(package.dir / "data" / "leprechaun-template.yml", self.config_path)
+            shutil.copy(le.sdata_dir / "leprechaun-template.yml", self.config_path)
         
             dialog = Setup(Setup.welcome_message)
             if dialog.exec_() == QDialog.Rejected:
@@ -201,7 +196,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.onHeartbeat()
 
     def actionEditConfig(self):
-        notepad.launch(self.notepad_dir, self.config_path)
+        notepad.launch(le.notepad_dir, self.config_path)
 
     def loadconfig(self):
         with open(self.config_path, encoding="utf-8") as f:
@@ -227,7 +222,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         QApplication.instance().exit(code)
 
     def log(self, *args):
-        timestamp = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
+        timestamp = f"[{datetime.now().isoformat(' ', 'milliseconds')}] "
         padding = " " * len(timestamp)
         prefix = timestamp
 

@@ -1,12 +1,8 @@
 import sys
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QStyleFactory
-import leprechaun as package
-from leprechaun.application import Application
+import leprechaun.cli
 
 def main():
-    app = Application()
-    return app.exec()
+    return leprechaun.cli.run()
 
 if __name__ == "__main__":
     sys.exit(main())

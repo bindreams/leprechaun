@@ -40,8 +40,7 @@ class MinerStack(MutableMapping):
         active = self.active
 
         if active is not None and not active.running:
-            app = le.Application()
-            log_path = app.crashes_dir / f"{datetime.now().isoformat()} {active.name}.txt"
+            log_path = le.miner_crashes_dir / f"{datetime.now().isoformat(' ', 'milliseconds')} {active.name}.txt"
             with open(log_path, "w", encoding="utf-8") as f:
                 for line in active.log:
                     f.write(line)

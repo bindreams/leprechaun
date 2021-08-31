@@ -1,6 +1,6 @@
 import subprocess as sp
 
-import leprechaun
+import leprechaun as le
 from leprechaun.base import InvalidConfigError, calc, download_and_extract
 from leprechaun.api.ethermine import totaldue, totalpaid
 from .base import Miner
@@ -13,9 +13,8 @@ class EthMiner(Miner):
 
     def __init__(self, name, data, config):
         super().__init__(name, data, config)
-        app = leprechaun.Application()
 
-        self.miner_dir = app.miners_dir / f"t-rex-{self.miner_version}"
+        self.miner_dir = le.miners_dir / f"t-rex-{self.miner_version}"
         self.miner_exe = self.miner_dir / "t-rex.exe"
 
         download_and_extract(self.miner_url, self.miner_dir)
