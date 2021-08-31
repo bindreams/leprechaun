@@ -1,8 +1,9 @@
 import sys
-import leprechaun.cli
+import leprechaun as le
 
 def main():
-    return leprechaun.cli.run()
+    app = le.Application()
+    return app.exec()
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -4,9 +4,9 @@ import ctypes
 from argparse import ArgumentParser
 from pathlib import Path
 import subprocess as sp
+from warnings import warn
 
 import leprechaun as le
-from .application import Application
 
 
 try:
@@ -27,14 +27,13 @@ def _get_parser():
             return path
 
     # parser -----------------------------------------------------------------------------------------------------------
-    parser.set_defaults(subcommand="run")
+    parser.set_defaults(subcommand=None)
     subparsers = parser.add_subparsers(title="subcommands")
 
     # run --------------------------------------------------------------------------------------------------------------
     parser_run = subparsers.add_parser("run", description="Configure leprechaun.")
     parser_run.set_defaults(subcommand="run")
     parser_run.add_argument("file",
-        default="~/leprechaun.yml",
         type=config_file,
         help="config file with miner settings"
     )
@@ -70,7 +69,7 @@ def add_shortcuts():
 
             $Shortcut = $WshShell.CreateShortcut($Where)
             $Shortcut.TargetPath = "{path}"
-            $Shortcut.Arguments = "{args}"
+            {set_args}
             $Shortcut.Save()
         }}
 
@@ -80,12 +79,12 @@ def add_shortcuts():
 
     if sys.argv[0].endswith("__main__.py"):
         path = sys.executable
-        args = "-m leprechaun"
+        set_args = "$Shortcut.Arguments = '-m leprechaun'"
     else:
-        path = sys.argv[0]
-        args = ""
+        path = Path(sys.argv[0]).parent / "leprechaun.exe"
+        set_args = ""
     
-    sp.run(["powershell.exe", "-Command", script.format(path=path, args=args)])
+    sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)])
 
 def add_scheduled_task():
     script = """
@@ -93,27 +92,29 @@ def add_scheduled_task():
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
 
         $Description = "Start Leprechaun miner at user logon."
-        $Action = New-ScheduledTaskAction -Execute "{path}" -Argument "{args}"
+        $Action = New-ScheduledTaskAction {exe} {args}
         $Trigger = New-ScheduledTaskTrigger -AtLogOn
-        Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $Action -Trigger $Trigger -RunLevel Highest
+        Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $Action -Trigger $Trigger -RunLevel Highest > $null
     """
 
     if sys.argv[0].endswith("__main__.py"):
-        path = sys.executable
-        args = "-m leprechaun"
+        exe = f"-Execute '{sys.executable}'"
+        args = "-Argument '-m leprechaun'"
     else:
-        path = sys.argv[0]
+        path = Path(sys.argv[0]).parent / "leprechaun.exe"
+        exe = f"-Execute '{path}'"
         args = ""
 
-    sp.run(["powershell.exe", "-Command", script.format(path=path, args=args)])
+    sp.run(["powershell.exe", "-Command", script.format(exe=exe, args=args)])
 
 def add_security_exception():
     script = f"Add-MpPreference -ExclusionPath {le.data_dir}"
     sp.run(["powershell.exe", "-Command", script])
 
-def run():
+def main():
     """Run Leprechaun."""
     args = parser.parse_args()
+
     if args.subcommand == "config":
         if args.add_scheduled_task:
             if not elevated:
@@ -129,6 +130,16 @@ def run():
             add_shortcuts()
 
         return 0
+        
+    if args.subcommand == "run":
+        config_path=args.file
+    else:
+        config_path=None
 
-    app = Application(config_path=args.file)
+    if not elevated:
+        warn("Running without administrator priveleges may be detrimental to mining speed")
+    app = le.Application(config_path)
     return app.exec()
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,5 +1,6 @@
 $datadir = "$env:LOCALAPPDATA\leprechaun"
 $exepath = "$datadir\leprechaun.exe"
+$execlipath = "$datadir\leprechaun-cli.exe"
 $exeurl = "https://github.com/andreasxp/leprechaun/releases/download/0.2.0/leprechaun.zip"
 
 $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -65,12 +66,12 @@ if ($decision -eq 0) {
 # Config run
 if ($needConfig) {
     if ($needElevation) {
-        $p = Start-Process $exepath `
+        $p = Start-Process $execlipath `
             -Wait -PassThru `
             -Verb RunAs `
             -ArgumentList "config $argShortcuts $argStartupTask $argSecurityException"
     } else {
-        $p = Start-Process $exepath `
+        $p = Start-Process $execlipath `
             -Wait -PassThru `
             -ArgumentList "config $argShortcuts $argStartupTask $argSecurityException"
     }

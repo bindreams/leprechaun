@@ -51,10 +51,10 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.log("Initializing")
         atexit.register(self._fp_log.close)
 
-        self.config_path = Path(config_path)
+        self.config_path = Path(config_path or "~/leprechaun.yml").expanduser()
 
         # Qt Application -----------------------------------------------------------------------------------------------
-        qapp = QApplication(sys.argv)
+        qapp = QApplication([])
         qapp.setQuitOnLastWindowClosed(False)
         qapp.setApplicationName("leprechaun")
         qapp.setApplicationDisplayName("Leprechaun Miner")
