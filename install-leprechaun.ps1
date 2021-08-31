@@ -67,11 +67,13 @@ if ($decision -eq 0) {
 if ($needConfig) {
     if ($needElevation) {
         $p = Start-Process $execlipath `
+            -WindowStyle Hidden `
             -Wait -PassThru `
             -Verb RunAs `
             -ArgumentList "config $argShortcuts $argStartupTask $argSecurityException"
     } else {
         $p = Start-Process $execlipath `
+            -WindowStyle Hidden `
             -Wait -PassThru `
             -ArgumentList "config $argShortcuts $argStartupTask $argSecurityException"
     }
