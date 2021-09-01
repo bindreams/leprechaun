@@ -6,17 +6,13 @@ $exeurl = "https://github.com/andreasxp/leprechaun/releases/download/0.3.1/lepre
 $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
 $elevated = $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 
-if (!(Test-Path $exepath)) {
-    if (!$Silent) { Write-Host -NoNewline "Downloading Leprechaun..." }
-    New-Item $datadir -ItemType Directory -Force
-    $tmp = New-TemporaryFile | Rename-Item -NewName { $_ -replace 'tmp$', 'zip' } -PassThru
-    Invoke-WebRequest -OutFile $tmp $exeurl
-    $tmp | Expand-Archive -DestinationPath $datadir -Force
-    $tmp | Remove-Item
-    if (!$Silent) { Write-Host " Done!" }
-} else {
-    if (!$Silent) { Write-Host "Leprechaun is already downloaded." }
-}
+Write-Host -NoNewline "Downloading Leprechaun... "
+New-Item $datadir -ItemType Directory -Force > $null
+$tmp = New-TemporaryFile | Rename-Item -NewName { $_ -replace 'tmp$', 'zip' } -PassThru
+Invoke-WebRequest -OutFile $tmp $exeurl
+$tmp | Expand-Archive -DestinationPath $datadir -Force
+$tmp | Remove-Item
+Write-Host "Done!" -Foreground Green
 
 # ======================================================================================================================
 $needConfig = $false
