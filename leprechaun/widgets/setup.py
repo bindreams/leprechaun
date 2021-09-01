@@ -16,6 +16,7 @@ class Setup(QDialog):
 
     def __init__(self, message, parent=None):
         super().__init__(parent)
+        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
 
         self.wlabel = QLabel(message)
         self.wlabel.setWordWrap(True)
