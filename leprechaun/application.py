@@ -4,7 +4,6 @@ from datetime import datetime
 import shutil
 import atexit
 
-import better_exceptions
 import yaml
 from yaml.parser import ParserError as YamlParserError
 from PySide2.QtCore import QObject, QTimer, Signal
@@ -13,7 +12,7 @@ from PySide2.QtWidgets import QApplication, QDialog, QSystemTrayIcon, QMenu
 
 import leprechaun as le
 from leprechaun import notepad
-from .base import InvalidConfigError
+from .base import InvalidConfigError, format_exception
 from .widgets import Dashboard, ExceptionMessageBox, Setup
 from .miners import MinerStack
 
@@ -228,7 +227,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
 
         for arg in args:
             if isinstance(arg, BaseException):
-                external_lines = better_exceptions.format_exception(None, arg, arg.__traceback__)
+                external_lines = format_exception(None, arg, arg.__traceback__)
                 lines = (line for external_line in external_lines for line in external_line[:-1].splitlines())
             else:
                 lines = str(arg).splitlines()

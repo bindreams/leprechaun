@@ -8,9 +8,14 @@ from tarfile import TarFile
 from contextlib import contextmanager
 from calc import calc as calc_impl, default_identifiers
 import requests
+from better_exceptions import ExceptionFormatter
 
 class InvalidConfigError(ValueError):
     pass
+
+_exception_formatter = ExceptionFormatter(colored=False, max_length=None)
+def format_exception(exc, value, tb):
+    return list(_exception_formatter.format_exception(exc, value, tb))
 
 @contextmanager
 def atleave(fn):
