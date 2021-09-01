@@ -39,10 +39,12 @@ class Log(QTextEdit):
 
 
 class MinerStack(QListWidget):
-    icon_none = None
-    icon_green = None
-    icon_red = None
-    icon_disable = None
+    icon_ready = None
+    icon_running = None
+    icon_not_allowed = None
+    icon_disabled = None
+    icon_broken = None
+    icon_paused = None
 
     def __init__(self, miners):
         super().__init__()
@@ -55,32 +57,34 @@ class MinerStack(QListWidget):
         self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 
         cls = type(self)
-        if cls.icon_none is None:
-            cls.icon_none = QIcon(str(le.dir / "data" / "status-none.svg"))
-            cls.icon_green = QIcon(str(le.dir / "data" / "status-green.svg"))
-            cls.icon_red = QIcon(str(le.dir / "data" / "status-red.svg"))
-            cls.icon_disable = QIcon(str(le.dir / "data" / "status-disable.svg"))
-    
-    def sizeHint(self):
-        return self.minimumSizeHint()
+        if cls.icon_ready is None:
+            cls.icon_ready = QIcon(str(le.dir / "data" / "status-ready.svg"))
+            cls.icon_running = QIcon(str(le.dir / "data" / "status-running.svg"))
+            cls.icon_not_allowed = QIcon(str(le.dir / "data" / "status-not-allowed.svg"))
+            cls.icon_disabled = QIcon(str(le.dir / "data" / "status-disabled.svg"))
+            cls.icon_broken = QIcon(str(le.dir / "data" / "status-broken.svg"))
+            cls.icon_paused = QIcon(str(le.dir / "data" / "status-paused.svg"))
     
     def update(self):
-        active_name = self.miners.active_name
-        before_active = True
+        app = le.Application()
 
         for i in range(self.count()):
             item = self.item(i)
             name = item.text()
+            miner = self.miners[name]
 
-            if name == active_name:
-                item.setIcon(self.icon_green)
-                before_active = False
-            elif not self.miners[name].enabled:
-                item.setIcon(self.icon_disable)
-            elif before_active:
-                item.setIcon(self.icon_red)
+            if miner.running:
+                item.setIcon(self.icon_running)
+            elif miner.broken:
+                item.setIcon(self.icon_broken)
+            elif not miner.enabled:
+                item.setIcon(self.icon_disabled)
+            elif app.paused:
+                item.setIcon(self.icon_paused)
+            elif not miner.allowed:
+                item.setIcon(self.icon_not_allowed)
             else:
-                item.setIcon(self.icon_none)
+                item.setIcon(self.icon_ready)
 
     def onItemDoubleClicked(self, item):
         name = item.text()
@@ -175,3 +179,6 @@ class Dashboard(QWidget):
         self.deleteLater()
         app = le.Application()
         app.dashboard = None
+
+    def sizeHint(self):
+        return QSize(rem()*30, rem()*20)
