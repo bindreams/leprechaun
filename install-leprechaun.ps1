@@ -46,7 +46,7 @@ if ($decision -eq 0) {
 
 # Security Exception
 $title    = "Add Windows Security exception for the application folder?"
-$description = "If you answer 'No', Microsoft Defender might flag some executables as crypto miners."
+$description = "If you answer 'No', your antivirus might quarantine or delete crypto mining executables."
 $choices  = "&Yes", "&No"
 $argSecurityException = ""
 $decision = $Host.UI.PromptForChoice($title, $description, $choices, 0)
@@ -58,6 +58,9 @@ if ($decision -eq 0) {
         $needElevation = $true
     }
 }
+
+Write-Host ""
+Write-Host -NoNewline "Installing Leprechaun... "
 
 # Config run
 if ($needConfig) {
@@ -75,7 +78,10 @@ if ($needConfig) {
     }
 
     if ($p.ExitCode -ne 0) {
-        Write-Host "There has been an error during installation."
+        Write-Host "Error" -Foreground Red
+        Write-Host ("There has been an error during installation. Error code: {0}" -f $p.ExitCode) -Foreground Red
         exit 1
     }
 }
+
+Write-Host "Done!" -Foreground Green
