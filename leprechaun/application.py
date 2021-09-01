@@ -205,7 +205,7 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         addresses = config["addresses"]
         for currency, value in addresses.items():
             if value == "<your address here>":
-                raise InvalidConfigError(f"Placeholder address for '{currency}' currency")
+                raise InvalidConfigError(f"placeholder address for '{currency}' currency")
         
         self.cpuminers.loadconfig(config, "cpu")
         self.gpuminers.loadconfig(config, "gpu")
