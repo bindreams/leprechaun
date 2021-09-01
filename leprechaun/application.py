@@ -123,10 +123,10 @@ class Application(QObject, metaclass=ApplicationMetaclass):
             if self.gpuminers.active:
                 status = f"{self.cpuminers.active.name} && {self.gpuminers.active.name}"
             else:
-                status = f"{self.cpuminers.active.name}"
+                status = self.cpuminers.active.name
         else:
             if self.gpuminers.active:
-                status = f"{self.gpuminers.active.name}"
+                status = self.gpuminers.active.name
             else:
                 status = "No active miners"
 
