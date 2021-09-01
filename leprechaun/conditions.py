@@ -21,7 +21,7 @@ def condition(data):
 
 class Condition(ABC):
     @abstractmethod
-    def __bool__(self):
+    def satisfied(self) -> bool:
         pass
 
 class WhenIdleCondition(Condition):
@@ -33,7 +33,7 @@ class WhenIdleCondition(Condition):
 
         self.seconds = data["idle-minutes"] * 60
     
-    def __bool__(self):
+    def satisfied(self):
         idle = (win32api.GetTickCount() - win32api.GetLastInputInfo()) / 1000.0
         return idle >= self.seconds
 
@@ -64,7 +64,7 @@ class ScheduleCondition(Condition):
         except (TypeError, ValueError):
             raise InvalidConfigError(f"invalid value for field 'until-time' (got '{data['until-time']}')") from None
     
-    def __bool__(self):
+    def satisfied(self):
         now = datetime.now()
         
         if now.weekday() not in self.days:
@@ -100,8 +100,8 @@ class AndCondition(Condition):
             cond = condition(entry)
             self.components.append(cond)
     
-    def __bool__(self):
-        return reduce(operator.and_, (bool(component) for component in self.components), True)
+    def satisfied(self):
+        return reduce(operator.and_, (component.satisfied() for component in self.components), True)
 
 
 class OrCondition(Condition):
@@ -114,5 +114,5 @@ class OrCondition(Condition):
             cond = condition(entry)
             self.components.append(cond)
     
-    def __bool__(self):
-        return reduce(operator.or_, (bool(component) for component in self.components), False)
+    def satisfied(self):
+        return reduce(operator.or_, (component.satisfied() for component in self.components), False)

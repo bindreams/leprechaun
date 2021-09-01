@@ -1,4 +1,3 @@
-import sys
 from abc import ABC, abstractmethod
 from collections import deque
 import platform
@@ -53,7 +52,7 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     
     @property
     def allowed(self):
-        return self.condition is None or bool(self.condition)
+        return self.condition is None or self.condition.satisfied()
 
     @property
     def running(self):
