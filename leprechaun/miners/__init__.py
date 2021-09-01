@@ -1,14 +1,27 @@
 from collections.abc import MutableMapping
 from typing import Union, Optional, Callable
 from datetime import datetime
+
+import win32api
+import win32con
+import win32job
+
 import leprechaun as le
 from leprechaun.base import InvalidConfigError
 from .xmr import XmrMiner
 from .eth import EthMiner
 from .base import Miner
 
-
 class MinerStack(MutableMapping):
+    # Create a Job Object - a container for running processes in Windows that ensures that child processes will die
+    # Borrowed from https://stackoverflow.com/a/23587108
+    hJob = win32job.CreateJobObject(None, "")
+    extended_info = win32job.QueryInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation)
+    extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+    win32job.SetInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
+
+    perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
+
     def __init__(self):
         super().__init__()
 
@@ -80,6 +93,10 @@ class MinerStack(MutableMapping):
         
         if new_miner is not None:
             new_miner.start()
+
+            # Assign new process to a Job, ensuring it will die if Leprechaun crashes
+            hProcess = win32api.OpenProcess(self.perms, False, new_miner.running_process.pid)
+            win32job.AssignProcessToJobObject(self.hJob, hProcess)
         
         self.active = new_miner
         self._impl_onswitch(active, new_miner)

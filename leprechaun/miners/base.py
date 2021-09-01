@@ -20,9 +20,16 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     def __init__(self, name, data, config):
         super().__init__()
         self.name = name
+        self.currency = None
+        self.address = None
+        self.enabled = None
         self.broken = False
+        self.condition = None
 
-        # Generic properties -------------------------------------------------------------------------------------------
+        self.running_process = None
+        self.log = deque(maxlen=1000)
+
+        # Parsing configuration ----------------------------------------------------------------------------------------
         if "currency" not in data:
             raise InvalidConfigError("missing property 'currency'")
         self.currency = data["currency"]
@@ -41,15 +48,9 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         try:
             self.condition = condition(data)
         except InvalidConfigError as e:
-            if str(e) == "no condition found":
-                self.condition = None
-            else:
+            # If no condition is found, it's okay
+            if str(e) != "no condition found":
                 raise
-        
-        self.log = deque(maxlen=1000)
-
-        # Private variables --------------------------------------------------------------------------------------------
-        self._running_process = None
     
     # Abstract methods =================================================================================================
     @abstractmethod
@@ -75,13 +76,13 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
 
     @property
     def running(self):
-        return self._running_process is not None and self._running_process.returncode is None
+        return self.running_process is not None and self.running_process.returncode is None
 
     @property
     def returncode(self):
-        if self._running_process is None:
+        if self.running_process is None:
             return None
-        return self._running_process.returncode
+        return self.running_process.returncode
 
     @property
     def workername(self):
@@ -90,16 +91,16 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     # Actions ==========================================================================================================
     def start(self):
         if not self.running:
-            self._running_process = self.process()
+            self.running_process = self.process()
             Thread(target=self._poll).start()
 
     def stop(self):
         if self.running:
-            self._running_process.terminate()
+            self.running_process.terminate()
 
     # Internal =========================================================================================================
     def _poll(self):
-        proc = self._running_process
+        proc = self.running_process
 
         for line in iter(proc.stdout.readline, ""):
             line = line.strip()
