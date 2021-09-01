@@ -27,9 +27,9 @@ class Setup(QDialog):
         self.werrorlabel.setStyleSheet("QLabel {color: red;}")
 
         self.wdocumentationlabel = QLabel("<a href=\"https://github.com/andreasxp/leprechaun#configuration\">Config file documentation</a>")
-        self.wlabel.setTextFormat(Qt.RichText)
-        self.wlabel.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        self.wlabel.setOpenExternalLinks(True)
+        self.wdocumentationlabel.setTextFormat(Qt.RichText)
+        self.wdocumentationlabel.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.wdocumentationlabel.setOpenExternalLinks(True)
 
         wline = QFrame()
         wline.setFrameShape(QFrame.HLine)
