@@ -40,10 +40,10 @@ class MinerStack(MutableMapping):
         active = self.active
 
         if active is not None and not active.running:
-            log_path = le.miner_crashes_dir / f"{datetime.now().isoformat(' ', 'milliseconds')} {active.name}.txt"
+            log_path = le.miner_crashes_dir / f"{datetime.now().strftime('%Y.%m.%d %H.%M.%S.%f')} {active.name}.txt"
             with open(log_path, "w", encoding="utf-8") as f:
                 for line in active.log:
-                    f.write(line)
+                    f.write(line + "\n")
             
             raise RuntimeError(f"Miner '{active.name}' stopped unexpectedly")
 
