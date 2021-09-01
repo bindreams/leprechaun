@@ -19,18 +19,31 @@ The configuration file will be located in `~/leprechaun.yml`.
 
 <details><summary>Building Leprechaun from source</summary><p>
   
-Requirements: [python 3.9+](https://www.python.org/), [git](https://git-scm.com/)  
-The following commands clone the repository to your PC and build the executable.
-```
-git clone https://github.com/andreasxp/leprechaun
-cd leprechaun
-python -m venv .venv
-.venv/Scripts/Activate
-pip install -e .
-pyinstaller freeze.spec
-deactivate
-```
-The executable will be in the `dist` folder. To launch it at startup, create a scheduled task that launches it at user logon with administrative privileges.
+  Requirements: [python 3.9+](https://www.python.org/), [git](https://git-scm.com/)
+  
+  Leprechaun is a python package that can be run by itself, but is distributed by being "frozen" into an executable using [pyinstaller](https://www.pyinstaller.org/).
+  Regardless of the way you want to run Leprechaun, you will need to clone this repository and run `pip install --editable` to obtain all the necessary packages automatically:
+  ```
+  $ git clone https://github.com/andreasxp/leprechaun
+  $ cd leprechaun
+  $ pip install --editable .
+  ```
+  
+  After `pip install`, you can launch the package from command line as follows:
+  ```
+  $ python -m leprechaun      # Launch Leprechaun GUI
+  $ leprechaun                # Launch Leprechaun GUI (alternative)
+  
+  $ python -m leprechaun.cli  # Launch Leprechaun CLI
+  $ leprechaun-cli            # Launch Leprechaun CLI (alternative)
+  ```
+  Leprechaun CLI supports interaction using command line. Use `leprechaun-cli --help` to find out more.
+  
+  To freeze the python package into an executable, use the included script:
+  ```
+  $ python build.py
+  ```
+  The executables will be in the `dist` folder. To add shortcuts, launch at startup, or otherwise configure the application, use `leprechaun-cli.exe config <options>`.
   
 </p></details>
 
