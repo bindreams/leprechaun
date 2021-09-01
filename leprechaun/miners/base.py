@@ -20,6 +20,7 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     def __init__(self, name, data, config):
         super().__init__()
         self.name = name
+        self.broken = False
 
         # Generic properties -------------------------------------------------------------------------------------------
         if "currency" not in data:
@@ -50,6 +51,24 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         # Private variables --------------------------------------------------------------------------------------------
         self._running_process = None
     
+    # Abstract methods =================================================================================================
+    @abstractmethod
+    def earnings(self) -> dict:
+        """Return earnings from this miner as a dict.
+        The dict must contain the following fields: `total`, `pending`, `scope`.
+        The `scope` field scecifies, to how many miners this statistic applies. Variants are: "miner" for only this
+        miner, "currency" for all miners of this currency, "address" for all miners for this address, or "with-id" for
+        all miners with the same `id` field.
+        The `total` and `pending` values need to be in miner's currency.
+
+        Note: all miners for one currency should return the same value for `scope`.
+        """
+
+    @abstractmethod
+    def process(self):
+        """Create a new subprocess.Popen instance running the miner with specified settings."""
+
+    # Properties =======================================================================================================
     @property
     def allowed(self):
         return self.condition is None or self.condition.satisfied()
@@ -67,21 +86,19 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     @property
     def workername(self):
         return f"{platform.node()}/{self.name}"
-    
-    @abstractmethod
-    def process(self):
-        """Create a new subprocess.Popen instance running the miner with specified settings."""
 
+    # Actions ==========================================================================================================
     def start(self):
         if not self.running:
             self._running_process = self.process()
-            Thread(target=self.poll).start()
+            Thread(target=self._poll).start()
 
     def stop(self):
         if self.running:
             self._running_process.terminate()
 
-    def poll(self):
+    # Internal =========================================================================================================
+    def _poll(self):
         proc = self._running_process
 
         for line in iter(proc.stdout.readline, ""):
@@ -93,14 +110,6 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         proc.wait()
         self.processFinished.emit(proc.returncode)
 
-    @abstractmethod
-    def earnings(self) -> dict:
-        """Return earnings from this miner as a dict.
-        The dict must contain the following fields: `total`, `pending`, `scope`.
-        The `scope` field scecifies, to how many miners this statistic applies. Variants are: "miner" for only this
-        miner, "currency" for all miners of this currency, "address" for all miners for this address, or "with-id" for
-        all miners with the same `id` field.
-        The `total` and `pending` values need to be in miner's currency.
-
-        Note: all miners for one currency should return the same value for `scope`.
-        """
+    # ==================================================================================================================
+    def __repr__(self):
+        return f"{type(self).__name__}(name='{self.name}', enabled={self.enabled}, running={self.running}, broken={self.broken})"

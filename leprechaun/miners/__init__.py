@@ -48,15 +48,19 @@ class MinerStack(MutableMapping):
         active = self.active
 
         if active is not None and not active.running:
-            log_path = le.miner_crashes_dir / f"{datetime.now().strftime('%Y.%m.%d %H.%M.%S.%f')} {active.name}.txt"
+            active.broken = True
+
+            log_filename = f"[{datetime.now().isoformat(' ', 'milliseconds').replace(':', '.')}] {active.name}.txt"
+            log_path = le.miner_crashes_dir / log_filename
             with open(log_path, "w", encoding="utf-8") as f:
                 for line in active.log:
                     f.write(line + "\n")
             
-            raise RuntimeError(f"Miner '{active.name}' stopped unexpectedly")
+            app = le.Application()
+            app.log(f"Miner '{active.name}' stopped unexpectedly.\nMiner log available as '{log_filename}'")
 
         for name, miner in self.items():
-            if miner.enabled and miner.allowed:
+            if miner.enabled and miner.allowed and not miner.broken:
                 if self.active_name != name:
                     self.switch(miner)
 
@@ -88,7 +92,7 @@ class MinerStack(MutableMapping):
         if self.onswitch is not None:
             self.onswitch(old, new)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Miner:
         return self.miners[key]
     
     def __setitem__(self, key, value):
