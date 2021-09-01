@@ -78,6 +78,8 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         self.heartbeat.setInterval(5000)
         self.heartbeat.timeout.connect(self.onHeartbeat)
 
+        self.paused = False
+
         # Dashboard ----------------------------------------------------------------------------------------------------
         self.dashboard = None
         """Created and deleted on request to conserve memory."""
@@ -115,8 +117,9 @@ class Application(QObject, metaclass=ApplicationMetaclass):
         return qapp.exec_()
 
     def onHeartbeat(self):
-        self.cpuminers.update()
-        self.gpuminers.update()
+        if not self.paused:
+            self.cpuminers.update()
+            self.gpuminers.update()
         
         # Status -------------------------------------------------------------------------------------------------------
         if self.cpuminers.active:
@@ -169,29 +172,26 @@ class Application(QObject, metaclass=ApplicationMetaclass):
     
     def actionPauseMining(self, duration):
         self.log(f"Mining paused for {duration}s")
+        self.paused = True
 
-        if self.cpuminers.active:
-            self.cpuminers.active.stop()
-        
-        if self.gpuminers.active:
-            self.gpuminers.active.stop()
+        self.cpuminers.stop()
+        self.gpuminers.stop()
 
         self.system_icon_status.setText("Mining paused")
         self.menu_pause.menuAction().setVisible(False)
         self.action_resume.setVisible(True)
         self.system_icon.setIcon(self.icon_idle)
         
-        self.heartbeat.stop()
         QTimer.singleShot(duration * 1000, self.actionResumeMining)
 
     def actionResumeMining(self):
         self.log("Mining resumed")
+        self.paused = False
 
         self.menu_pause.menuAction().setVisible(True)
         self.action_resume.setVisible(False)
         self.system_icon.setIcon(self.icon_active)
 
-        self.heartbeat.start()
         self.onHeartbeat()
 
     def actionEditConfig(self):

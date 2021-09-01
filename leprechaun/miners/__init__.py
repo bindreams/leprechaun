@@ -1,23 +1,31 @@
 from collections.abc import MutableMapping
-from typing import Union
+from typing import Union, Optional, Callable
 from datetime import datetime
 import leprechaun as le
 from leprechaun.base import InvalidConfigError
 from .xmr import XmrMiner
 from .eth import EthMiner
+from .base import Miner
 
 
 class MinerStack(MutableMapping):
     def __init__(self):
         super().__init__()
 
-        self.miners = {}
-        self.active_name = None
-        self.onchange = None
+        self.miners: dict[str, Miner] = {}
+        self.active_name: Optional[str] = None
+        self.onswitch: Optional[Callable] = None
     
     @property
     def active(self):
         return self.get(self.active_name, None)
+    
+    @active.setter
+    def active(self, value):
+        if value is None:
+            self.active_name = None
+        else:
+            self.active_name = value.name
 
     def loadconfig(self, config, type: Union["cpu", "gpu"]):
         if type == "cpu":
@@ -50,23 +58,35 @@ class MinerStack(MutableMapping):
         for name, miner in self.items():
             if miner.enabled and miner.allowed:
                 if self.active_name != name:
-                    if active is not None:
-                        active.stop()
-                    
-                    miner.start()
-                    self.active_name = name
-                    self._impl_onchange(name)
+                    self.switch(miner)
 
                 break
         else:
-            if active is not None:
-                active.stop()
-            self.active_name = None
-            self._impl_onchange(None)
+            self.stop()
     
-    def _impl_onchange(self, name):
-        if self.onchange is not None:
-            self.onchange(name)
+    def switch(self, new_miner: Union[str, Miner, None]):
+        """Switch to a new miner."""
+        active = self.active
+
+        if active is not None:
+            active.stop()
+        
+        if isinstance(new_miner, str):
+            new_miner = self[new_miner]
+        
+        if new_miner is not None:
+            new_miner.start()
+        
+        self.active = new_miner
+        self._impl_onswitch(active, new_miner)
+
+    def stop(self):
+        """Stop the active miner."""
+        self.switch(None)
+
+    def _impl_onswitch(self, old, new):
+        if self.onswitch is not None:
+            self.onswitch(old, new)
 
     def __getitem__(self, key):
         return self.miners[key]
