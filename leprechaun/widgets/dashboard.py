@@ -53,7 +53,7 @@ class MinerStack(QListWidget):
         for name in miners:
             self.addItem(name)
         
-        self.setIconSize(QSize(rem()*1.5, rem()*1.5))
+        self.setIconSize(QSize(rem()*2, rem()*2))
         self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 
         cls = type(self)
@@ -99,6 +99,10 @@ class Dashboard(QWidget):
         super().__init__()
 
         moneyfont = font("Open Sans", size=2.25*rempt())
+
+        f = self.font()
+        f.setPointSizeF(1.2*rempt())
+        self.setFont(f)
 
         self.wtotal = QLabel()
         self.wtotal.setStyleSheet("padding: 0 0.5em 0 0.5em")
