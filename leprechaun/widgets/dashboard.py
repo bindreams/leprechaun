@@ -39,12 +39,12 @@ class Log(QTextEdit):
 
 
 class MinerStack(QListWidget):
-    icon_ready = None
-    icon_running = None
+    icon_ready       = None
+    icon_running     = None
     icon_not_allowed = None
-    icon_disabled = None
-    icon_broken = None
-    icon_paused = None
+    icon_disabled    = None
+    icon_broken      = None
+    icon_paused      = None
 
     def __init__(self, miners):
         super().__init__()
@@ -56,14 +56,13 @@ class MinerStack(QListWidget):
         self.setIconSize(QSize(rem()*2, rem()*2))
         self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 
-        cls = type(self)
-        if cls.icon_ready is None:
-            cls.icon_ready = QIcon(str(le.dir / "data" / "status-ready.svg"))
-            cls.icon_running = QIcon(str(le.dir / "data" / "status-running.svg"))
-            cls.icon_not_allowed = QIcon(str(le.dir / "data" / "status-not-allowed.svg"))
-            cls.icon_disabled = QIcon(str(le.dir / "data" / "status-disabled.svg"))
-            cls.icon_broken = QIcon(str(le.dir / "data" / "status-broken.svg"))
-            cls.icon_paused = QIcon(str(le.dir / "data" / "status-paused.svg"))
+        if self.icon_ready is None:
+            MinerStack.icon_ready       = QIcon(str(le.sdata_dir / "icons" / "status-ready.svg"))
+            MinerStack.icon_running     = QIcon(str(le.sdata_dir / "icons" / "status-running.svg"))
+            MinerStack.icon_not_allowed = QIcon(str(le.sdata_dir / "icons" / "status-not-allowed.svg"))
+            MinerStack.icon_disabled    = QIcon(str(le.sdata_dir / "icons" / "status-disabled.svg"))
+            MinerStack.icon_broken      = QIcon(str(le.sdata_dir / "icons" / "status-broken.svg"))
+            MinerStack.icon_paused      = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
     
     def update(self):
         app = le.Application()
