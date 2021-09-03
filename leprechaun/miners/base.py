@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from collections import deque
 import platform
 from threading import Thread
+import shlex
+import subprocess as sp
 
 from PySide2.QtCore import QObject, Signal
 
@@ -25,13 +27,14 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         self.enabled = None
         self.broken = False
         self.condition = None
+        self.extra_backend_args = None
 
         self.running_process = None
         self.log = deque(maxlen=1000)
 
         # Parsing configuration ----------------------------------------------------------------------------------------
         if "currency" not in data:
-            raise InvalidConfigError("missing property 'currency'")
+            raise InvalidConfigError("missing field 'currency'")
         self.currency = data["currency"]
 
         try:
@@ -52,6 +55,13 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
             if str(e) != "no condition found":
                 raise
 
+        self.extra_backend_args = data.get("extra-backend-args", [])
+        if isinstance(self.extra_backend_args, str):
+            self.extra_backend_args = shlex.split(self.extra_backend_args)
+
+        if not isinstance(self.extra_backend_args, list):
+            raise InvalidConfigError("field 'extra-backend-args' must be a list or a string")
+
     # Abstract methods =================================================================================================
     @abstractmethod
     def earnings(self) -> dict:
@@ -66,8 +76,11 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         """
 
     @abstractmethod
-    def process(self):
-        """Create a new subprocess.Popen instance running the miner with specified settings."""
+    def args(self):
+        """Return a list of command-line arguments required to launch the process, like for subprocess.run.
+
+        Example: return [leprechaun.miners_dir / "ethminer" / "ethminer.exe", "--pool", "..."]
+        """
 
     # Properties =======================================================================================================
     @property
@@ -91,7 +104,13 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     # Actions ==========================================================================================================
     def start(self):
         if not self.running:
-            self.running_process = self.process()
+            self.running_process = sp.Popen(self.args() + self.extra_backend_args,
+                stdin=sp.DEVNULL,
+                stdout=sp.PIPE,
+                stderr=sp.STDOUT,
+                text=True,
+                creationflags=sp.CREATE_NO_WINDOW
+            )
             Thread(target=self._poll).start()
 
     def stop(self):

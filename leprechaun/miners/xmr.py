@@ -1,5 +1,4 @@
 import multiprocessing
-import subprocess as sp
 
 import leprechaun as le
 from leprechaun.base import InvalidConfigError, calc, download_and_extract
@@ -11,12 +10,11 @@ class XmrMiner(Miner):
     miner_version = "6.14.1"
     miner_url = \
         f"https://github.com/xmrig/xmrig/releases/download/v{miner_version}/xmrig-{miner_version}-msvc-win64.zip"
+    miner_dir = le.miners_dir / f"xmrig-{miner_version}"
+    miner_exe = miner_dir / "xmrig.exe"
 
     def __init__(self, name, data, config):
         super().__init__(name, data, config)
-
-        self.miner_dir = le.miners_dir / f"xmrig-{self.miner_version}"
-        self.miner_exe = self.miner_dir / "xmrig.exe"
 
         download_and_extract(self.miner_url, self.miner_dir, remove_nested=True)
 
@@ -50,22 +48,16 @@ class XmrMiner(Miner):
                 f"process thread count must be in range [1, {max_threads}] (got '{self.process_threads}')"
             )
 
-    def process(self):
-        return sp.Popen([
-                self.miner_exe,
-                "-o", "pool.supportxmr.com:443",
-                "-u", self.address,
-                "--rig-id", self.workername,
-                "--cpu-priority", str(self.process_priority),
-                "-t", str(self.process_threads),
-                "-k", "--tls", "--no-color"
-            ],
-            stdin=sp.DEVNULL,
-            stdout=sp.PIPE,
-            stderr=sp.STDOUT,
-            text=True,
-            creationflags=sp.CREATE_NO_WINDOW
-        )
+    def args(self):
+        return [
+            self.miner_exe,
+            "-o", "pool.supportxmr.com:443",
+            "-u", self.address,
+            "--rig-id", self.workername,
+            "--cpu-priority", str(self.process_priority),
+            "-t", str(self.process_threads),
+            "-k", "--tls", "--no-color"
+        ]
 
     def earnings(self):
         paid = totalpaid(self.address)

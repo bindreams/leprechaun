@@ -1,86 +1,50 @@
-import subprocess as sp
-
 import leprechaun as le
-from leprechaun.base import InvalidConfigError, calc, download_and_extract
+from leprechaun.base import InvalidConfigError, download_and_extract
 from leprechaun.api.ethermine import totaldue, totalpaid
 from .base import Miner
 
 
 class EthMiner(Miner):
-    miner_version = "0.21.6"
-    miner_url = \
-        f"https://github.com/trexminer/T-Rex/releases/download/{miner_version}/t-rex-{miner_version}-win.zip"
+    trex_version = "0.21.6"
+    trex_url = \
+        f"https://github.com/trexminer/T-Rex/releases/download/{trex_version}/t-rex-{trex_version}-win.zip"
+    trex_dir = le.miners_dir / f"t-rex-{trex_version}"
+    trex_exe = trex_dir / "t-rex.exe"
+
+    nsfminer_version = "1.3.14"
+    nsfminer_url = \
+        f"https://github.com/no-fee-ethereum-mining/nsfminer/releases/download/v{nsfminer_version}/nsfminer_{nsfminer_version}-windows_10-cuda_11.3-opencl.zip"
+    nsfminer_dir = le.miners_dir / f"nsfminer-{nsfminer_version}"
+    nsfminer_exe = nsfminer_dir / "nsfminer.exe"
 
     def __init__(self, name, data, config):
         super().__init__(name, data, config)
 
-        self.miner_dir = le.miners_dir / f"t-rex-{self.miner_version}"
-        self.miner_exe = self.miner_dir / "t-rex.exe"
+        self.backend = data.get("backend", "t-rex")
+        if self.backend not in ("t-rex", "ethminer"):
+            raise InvalidConfigError(f"backend must be one of: 't-rex', 'ethminer' (got '{self.backend}')")
 
-        download_and_extract(self.miner_url, self.miner_dir)
-
-        # Configuration ------------------------------------------------------------------------------------------------
-        if sum(1 for field in ("fan-speed", "max-temp", "max-mem-temp") if field in data) > 1:
-            raise InvalidConfigError(
-                "only one of the fields 'fan-speed' 'max-temp' 'max-mem-temp' can be specified at a time"
-            )
-
-        self.temperature_config = None
-
-        if "fan-speed" in data:
-            val = round(calc(data["fan-speed"], {"min": 0, "max": 100}))
-            self.temperature_config = f"{val}"
-
-        if "max-temp" in data:
-            val = round(calc(data["max-temp"], {"max": 90}))
-            self.temperature_config = f"t:{val}"
-
-        if "max-mem-temp" in data:
-            val = round(calc(data["max-mem-temp"], {"max": 90}))
-            self.temperature_config = f"tm:{val}"
-
-        try:
-            self.low_load = int(data.get("low-load-mode", False))
-            if self.low_load not in (0, 1):
-                raise InvalidConfigError(f"'low-load-mode' field must be true or false, got '{self.low_load}'")
-        except ValueError:
-            raise InvalidConfigError("invalid value for field 'low-load-mode' (need true or false)") from None
-
-        # Process priority
-        try:
-            process_priority = calc(data.get("process-priority", 2), {"min": 0, "max": 5})
-            if process_priority != int(process_priority):
-                raise InvalidConfigError(f"process priority must an integer (got '{process_priority}')")
-
-            self.process_priority = int(process_priority)
-        except ValueError:
-            raise InvalidConfigError("invalid expression in field 'process-priority'") from None
-
-        if not 0 <= self.process_priority <= 5:
-            raise InvalidConfigError(f"process priority must be in range [0, 5] (got '{self.process_priority}')")
-
-    def process(self):
-        if self.temperature_config is None:
-            temperature_parameters = []
+        if self.backend == "t-rex":
+            download_and_extract(self.trex_url, self.trex_dir)
         else:
-            temperature_parameters = ["--fan", self.temperature_config]
+            download_and_extract(self.nsfminer_url, self.nsfminer_dir)
 
-        return sp.Popen([
-                self.miner_exe,
+    def args(self):
+        if self.backend == "t-rex":
+            return [
+                self.trex_exe,
                 "-a", "ethash",
                 "-o", "stratum+tcp://eu1.ethermine.org:4444",
                 "-u", self.address,
                 "-p", "x",
                 "-w", self.workername,
-                "--cpu-priority", str(self.process_priority),
-                *temperature_parameters
-            ],
-            stdin=sp.DEVNULL,
-            stdout=sp.PIPE,
-            stderr=sp.STDOUT,
-            text=True,
-            creationflags=sp.CREATE_NO_WINDOW
-        )
+            ]
+
+        return [
+            self.nsfminer_exe,
+            "-P", f"stratum+ssl://{self.address}.{self.workername}:x@eu1.ethermine.org:5555",
+            "--nocolor"
+        ]
 
     def earnings(self):
         paid = totalpaid(self.address)
