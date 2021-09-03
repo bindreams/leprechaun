@@ -15,7 +15,7 @@ settings = """
     "telemetry.enableTelemetry": false,
     "telemetry.enableCrashReporter": false,
     "update.mode": "none",
-    
+
     "workbench.colorTheme": "Default Light+",
     "workbench.editor.showTabs": false,
     "workbench.activityBar.visible": false,

@@ -38,5 +38,5 @@ def usdprices(symbols):
 
     for symbol in symbols:
         result[symbol] = usdprice(symbol)
-    
+
     return result

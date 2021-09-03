@@ -49,7 +49,7 @@ class XmrMiner(Miner):
             raise InvalidConfigError(
                 f"process thread count must be in range [1, {max_threads}] (got '{self.process_threads}')"
             )
-        
+
     def process(self):
         return sp.Popen([
                 self.miner_exe,
@@ -70,7 +70,7 @@ class XmrMiner(Miner):
     def earnings(self):
         paid = totalpaid(self.address)
         pending = totaldue(self.address)
-        
+
         return {
             "total": paid + pending,
             "pending": pending,

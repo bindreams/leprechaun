@@ -29,11 +29,11 @@ class MinerStack(MutableMapping):
         self.miners: dict[str, Miner] = {}
         self.active_name: Optional[str] = None
         self.onswitch: Optional[Callable] = None
-    
+
     @property
     def active(self):
         return self.get(self.active_name, None)
-    
+
     @active.setter
     def active(self, value):
         if value is None:
@@ -48,7 +48,7 @@ class MinerStack(MutableMapping):
             data = config.get("gpu-miners", {})
         else:
             raise ValueError("Unknown value for parameter 'type'")
-        
+
         self.clear()
 
         for miner_name, miner_data in data.items():
@@ -69,7 +69,7 @@ class MinerStack(MutableMapping):
             with open(log_path, "w", encoding="utf-8") as f:
                 for line in active.log:
                     f.write(line + "\n")
-            
+
             self.app.log(f"Miner '{active.name}' stopped unexpectedly.\nMiner log available as '{log_filename}'")
 
         for name, miner in self.items():
@@ -80,24 +80,24 @@ class MinerStack(MutableMapping):
                 break
         else:
             self.stop()
-    
+
     def switch(self, new_miner: Union[str, Miner, None]):
         """Switch to a new miner."""
         active = self.active
 
         if active is not None:
             active.stop()
-        
+
         if isinstance(new_miner, str):
             new_miner = self[new_miner]
-        
+
         if new_miner is not None:
             new_miner.start()
 
             # Assign new process to a Job, ensuring it will die if Leprechaun crashes
             hProcess = win32api.OpenProcess(self.perms, False, new_miner.running_process.pid)
             win32job.AssignProcessToJobObject(self.hJob, hProcess)
-        
+
         self.active = new_miner
         self._impl_onswitch(active, new_miner)
 
@@ -111,16 +111,16 @@ class MinerStack(MutableMapping):
 
     def __getitem__(self, key) -> Miner:
         return self.miners[key]
-    
+
     def __setitem__(self, key, value):
         self.miners[key] = value
-    
+
     def __delitem__(self, key):
         del self.miners[key]
-    
+
     def __iter__(self):
         return iter(self.miners)
-    
+
     def __len__(self):
         return len(self.miners)
 
@@ -130,7 +130,7 @@ def miner(type: Union["cpu", "gpu"], name, data, config):
         currency = data["currency"]
     except KeyError:
         raise InvalidConfigError("missing property 'currency'") from None
-    
+
     if type == "cpu":
         # CPU miners ---------------------------------------------------------------------------------------------------
         if currency == "XMR":

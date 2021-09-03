@@ -24,7 +24,7 @@ class EthMiner(Miner):
             raise InvalidConfigError(
                 "only one of the fields 'fan-speed' 'max-temp' 'max-mem-temp' can be specified at a time"
             )
-        
+
         self.temperature_config = None
 
         if "fan-speed" in data:
@@ -34,7 +34,7 @@ class EthMiner(Miner):
         if "max-temp" in data:
             val = round(calc(data["max-temp"], {"max": 90}))
             self.temperature_config = f"t:{val}"
-        
+
         if "max-mem-temp" in data:
             val = round(calc(data["max-mem-temp"], {"max": 90}))
             self.temperature_config = f"tm:{val}"
@@ -58,7 +58,7 @@ class EthMiner(Miner):
 
         if not 0 <= self.process_priority <= 5:
             raise InvalidConfigError(f"process priority must be in range [0, 5] (got '{self.process_priority}')")
-        
+
     def process(self):
         if self.temperature_config is None:
             temperature_parameters = []
@@ -85,7 +85,7 @@ class EthMiner(Miner):
     def earnings(self):
         paid = totalpaid(self.address)
         pending = totaldue(self.address)
-        
+
         return {
             "total": paid + pending,
             "pending": pending,

@@ -37,6 +37,6 @@ def totalpaid(addr):
 
 def totaldue(addr):
     data = dashboard(addr)
-    
+
     total = data["currentStatistics"].get("unpaid", 0) / 10**currency_precision
     return total

@@ -32,7 +32,7 @@ class WhenIdleCondition(Condition):
             raise InvalidConfigError(f"'idle-minutes' field must be above 0 (got '{data['idle-minutes']})'")
 
         self.seconds = data["idle-minutes"] * 60
-    
+
     def satisfied(self):
         idle = (win32api.GetTickCount() - win32api.GetLastInputInfo()) / 1000.0
         return idle >= self.seconds
@@ -58,15 +58,15 @@ class ScheduleCondition(Condition):
             self.from_time = time.fromisoformat(data.get("from-time", "00:00"))
         except (TypeError, ValueError):
             raise InvalidConfigError(f"invalid value for field 'from-time' (got '{data['from-time']}')") from None
-        
+
         try:
             self.until_time = time.fromisoformat(data.get("until-time", "00:00"))
         except (TypeError, ValueError):
             raise InvalidConfigError(f"invalid value for field 'until-time' (got '{data['until-time']}')") from None
-    
+
     def satisfied(self):
         now = datetime.now()
-        
+
         if now.weekday() not in self.days:
             return False
 
@@ -80,7 +80,7 @@ class ScheduleCondition(Condition):
 
         if self.from_time < self.until_time:
             return from_datetime <= now < until_datetime
-        
+
         todaybegin = datetime.combine(today, time.min)
         tomorrowbegin = datetime.combine(today + timedelta(days=1), time.min)
 
@@ -99,7 +99,7 @@ class AndCondition(Condition):
         for entry in condition_data:
             cond = condition(entry)
             self.components.append(cond)
-    
+
     def satisfied(self):
         return reduce(operator.and_, (component.satisfied() for component in self.components), True)
 
@@ -113,6 +113,6 @@ class OrCondition(Condition):
         for entry in condition_data:
             cond = condition(entry)
             self.components.append(cond)
-    
+
     def satisfied(self):
         return reduce(operator.or_, (component.satisfied() for component in self.components), False)

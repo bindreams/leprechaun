@@ -18,7 +18,7 @@ class Application(CliApplication):
     def __init__(self, config_path=None):
         self._fp_log = open(le.data_dir / "log.txt", "a", encoding="utf-8", buffering=1)
         atexit.register(self._fp_log.close)
-        
+
         super().__init__()
 
         # Icons --------------------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ class Application(CliApplication):
         qapp.setQuitOnLastWindowClosed(False)
         qapp.setApplicationDisplayName("Leprechaun Miner")
         qapp.setWindowIcon(self.icon_active)
-        
+
         # Notepad for config editing -----------------------------------------------------------------------------------
         self.notepad_dir = le.data_dir / "notepad"
         if not self.notepad_dir.exists():
@@ -40,7 +40,7 @@ class Application(CliApplication):
         # Fonts
         for path in (le.sdata_dir / "fonts").rglob("*.ttf"):
             QFontDatabase.addApplicationFont(str(path))
-        
+
         # Dashboard ----------------------------------------------------------------------------------------------------
         self.dashboard = None
         """Created and deleted on request to conserve memory."""
@@ -78,7 +78,7 @@ class Application(CliApplication):
             self.loadconfig()
         except FileNotFoundError:
             shutil.copy(le.sdata_dir / "leprechaun-template.yml", self.config_path)
-        
+
             dialog = Setup(self, Setup.welcome_message)
             if dialog.exec_() == QDialog.Rejected:
                 QApplication.instance().exit()
@@ -89,14 +89,14 @@ class Application(CliApplication):
             if dialog.exec_() == QDialog.Rejected:
                 QApplication.instance().exit()
                 return
-        
+
         self.system_icon.show()
         self.heartbeat.start()
         self.update()
 
     def update(self):
         super().update()
-        
+
         # Status -------------------------------------------------------------------------------------------------------
         if self.cpuminers.active:
             if self.gpuminers.active:
@@ -123,7 +123,7 @@ class Application(CliApplication):
         self.dashboard.show()
         self.dashboard.raise_()
         self.dashboard.activateWindow()
-    
+
     def actionPauseMining(self, duration):
         self.log(f"Mining paused for {duration}s")
         self.paused = True
@@ -135,7 +135,7 @@ class Application(CliApplication):
         self.menu_pause.menuAction().setVisible(False)
         self.action_resume.setVisible(True)
         self.system_icon.setIcon(self.icon_idle)
-        
+
         QTimer.singleShot(duration * 1000, self.actionResumeMining)
 
     def actionResumeMining(self):

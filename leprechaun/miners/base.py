@@ -33,25 +33,25 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         if "currency" not in data:
             raise InvalidConfigError("missing property 'currency'")
         self.currency = data["currency"]
-        
+
         try:
             self.address = data["address"]
         except KeyError:
             addresses = config["addresses"]
             if self.currency not in addresses:
                 raise InvalidConfigError(f"wallet address for currency {self.currency} not found") from None
-            
+
             self.address = addresses[self.currency]
-        
+
         self.enabled = data.get("enabled", True)
-        
+
         try:
             self.condition = condition(data)
         except InvalidConfigError as e:
             # If no condition is found, it's okay
             if str(e) != "no condition found":
                 raise
-    
+
     # Abstract methods =================================================================================================
     @abstractmethod
     def earnings(self) -> dict:

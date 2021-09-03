@@ -35,7 +35,7 @@ def atleave(fn):
     resource = Resource()
     with atleave(lambda: release(resource)):
         # Work on resource
-    ``` 
+    ```
     """
     try:
         yield None
@@ -65,7 +65,7 @@ def download_and_extract(url, dest, callback=None, *, format=None, if_exists=Fal
     If `nested` is True, assume the archive contains a single folder with files inside (not files directly).
     """
     dest = Path(dest)
-    
+
     if not if_exists and dest.exists():
         return
 
@@ -109,7 +109,7 @@ def extract(src, dest, callback=None, *, format=None, if_exists=False, remove_ne
     If `nested` is True, assume the archive contains a single folder with files inside (not files directly).
     """
     src = Path(src)
-    
+
     if not if_exists and dest.exists():
         return
 
@@ -122,13 +122,13 @@ def extract(src, dest, callback=None, *, format=None, if_exists=False, remove_ne
             if suffix.endswith(extension):
                 format = format_check
                 break
-        
+
         if format is not None:
             break
 
     if format is None:
         raise ValueError(f"Could not determine archive format from filename '{src.name}'")
-    
+
     # Extract functions ------------------------------------------------------------------------------------------------
     def extract_tar(dest):
         with TarFile(src) as tf:
@@ -173,7 +173,7 @@ def extract(src, dest, callback=None, *, format=None, if_exists=False, remove_ne
 
             if len(files) != 1:
                 raise ValueError("remove_nested set to True, but more than one file found")
-            
+
             file = files[0]
             shutil.copytree(file, dest)
     else:

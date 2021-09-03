@@ -23,7 +23,7 @@ class Log(QTextEdit):
 
         # Add self to a registry to not get accidentally deleted
         self._registry[id(self)] = self
-    
+
     def append(self, text: str):
         scrollbar = self.verticalScrollBar()
         at_bottom = scrollbar.value() == scrollbar.maximum()
@@ -53,7 +53,7 @@ class MinerStack(QListWidget):
 
         for name in miners:
             self.addItem(name)
-        
+
         self.setIconSize(QSize(rem()*2, rem()*2))
         self.itemDoubleClicked.connect(self.onItemDoubleClicked)
 
@@ -64,7 +64,7 @@ class MinerStack(QListWidget):
             MinerStack.icon_disabled    = QIcon(str(le.sdata_dir / "icons" / "status-disabled.svg"))
             MinerStack.icon_broken      = QIcon(str(le.sdata_dir / "icons" / "status-broken.svg"))
             MinerStack.icon_paused      = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
-    
+
     def update(self):
         for i in range(self.count()):
             item = self.item(i)
@@ -132,7 +132,7 @@ class Dashboard(QWidget):
         ly.addWidget(QLabel("GPU Miners:"), 2, 1)
         ly.addWidget(self.wcpuminers, 3, 0)
         ly.addWidget(self.wgpuminers, 3, 1)
-    
+
     def update(self):
         self.wcpuminers.update()
         self.wgpuminers.update()
@@ -159,10 +159,10 @@ class Dashboard(QWidget):
 
                 if earnings["scope"] == "with-id":
                     earnings_id = earnings["id"]
-                
+
                 if earnings_id in known_ids:
                     continue
-                
+
                 known_ids.add(earnings_id)
 
                 etotal += earnings["total"] * price
@@ -170,10 +170,10 @@ class Dashboard(QWidget):
             except OSError as e:
                 self.app.log(f"Exception raised while getting earnings of miner '{miner.name}':", e)
                 return  # Skip setting earnings
-        
+
         self.wtotal.setText(f"${etotal:,.2f}")
         self.wpending.setText(f"${epending:,.2f}")
-    
+
     def closeEvent(self, event):
         super().closeEvent(event)
         self.app.dashboard = None

@@ -39,12 +39,12 @@ def _get_parser():
     # config -----------------------------------------------------------------------------------------------------------
     parser_config = subparsers.add_parser("config", description="Configure leprechaun.")
     parser_config.set_defaults(subcommand="config")
-    
+
     parser_config.add_argument("--add-shortcuts",
         action="store_true",
         help="add shortcuts to the start menu and desktop"
     )
-    
+
     parser_config.add_argument("--add-scheduled-task",
         action="store_true",
         help="add scheduled task that launches Leprechaun at startup"
@@ -83,7 +83,7 @@ def add_shortcuts():
     else:
         path = Path(sys.argv[0]).parent / "leprechaun.exe"
         set_args = ""
-    
+
     sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)], check=True)
 
 
@@ -174,13 +174,13 @@ class CliApplication(QObject):
         for currency, value in addresses.items():
             if value == "<your address here>":
                 raise InvalidConfigError(f"placeholder address for '{currency}' currency")
-        
+
         self.cpuminers.loadconfig(config, "cpu")
         self.gpuminers.loadconfig(config, "gpu")
 
     def exit(self, code=0):
         self.log("Exiting")
-        
+
         self.cpuminers.stop()
         self.gpuminers.stop()
 
@@ -197,7 +197,7 @@ class CliApplication(QObject):
                 lines = (line for external_line in external_lines for line in external_line[:-1].splitlines())
             else:
                 lines = str(arg).splitlines()
-        
+
             for line in lines:
                 yield f"{prefix}{line}\n"
                 prefix = padding
@@ -226,7 +226,7 @@ def main():
             if not elevated:
                 parser.error("supplied arguments require administrator priveleges")
             add_scheduled_task()
-        
+
         if args.add_security_exception:
             if not elevated:
                 parser.error("supplied arguments require administrator priveleges")
