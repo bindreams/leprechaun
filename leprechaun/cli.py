@@ -1,10 +1,16 @@
+import subprocess as sp
 import sys
 from argparse import ArgumentParser
+from datetime import datetime
 from pathlib import Path
-import subprocess as sp
-from PySide2.QtCore import QCoreApplication
+
+import yaml
+from PySide2.QtCore import QCoreApplication, QObject, QTimer, Signal
+
 import leprechaun as le
-from leprechaun.base import elevated
+from leprechaun.base import InvalidConfigError, elevated, format_exception
+from leprechaun.miners import MinerStack
+
 
 # CLI argument parser ==================================================================================================
 def _get_parser():
@@ -53,6 +59,7 @@ def _get_parser():
 
 parser = _get_parser()
 
+
 # Config functions =====================================================================================================
 def add_shortcuts():
     script = """
@@ -79,6 +86,7 @@ def add_shortcuts():
     
     sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)], check=True)
 
+
 def add_scheduled_task():
     script = """
         $TaskName = "Leprechaun Miner Start Task"
@@ -100,9 +108,112 @@ def add_scheduled_task():
 
     sp.run(["powershell.exe", "-Command", script.format(exe=exe, args=args)], check=True)
 
+
 def add_security_exception():
     script = f"Add-MpPreference -ExclusionPath {le.data_dir}"
     sp.run(["powershell.exe", "-Command", script], check=True)
+
+
+# CliApplication =======================================================================================================
+class CliApplication(QObject):
+    cpuMinerChanged = Signal(str)
+    gpuMinerChanged = Signal(str)
+
+    def __init__(self, config_path=None):
+        super().__init__()
+
+        # Exception catching -------------------------------------------------------------------------------------------
+        self.__excepthook__ = sys.excepthook
+        sys.excepthook = self.excepthook
+
+        # Folders and logs ---------------------------------------------------------------------------------------------
+        le.data_dir.mkdir(exist_ok=True)
+        le.miners_dir.mkdir(exist_ok=True)
+        le.miner_crashes_dir.mkdir(exist_ok=True)
+
+        self.log("Initializing")
+        self.config_path = Path(config_path or "~/leprechaun.yml").expanduser()
+
+        # Qt Application -----------------------------------------------------------------------------------------------
+        qapp = QCoreApplication.instance()
+        qapp.setApplicationName("leprechaun")
+
+        # Miners -------------------------------------------------------------------------------------------------------
+        self.cpuminers = MinerStack(self)
+        self.gpuminers = MinerStack(self)
+        self.cpuminers.onchange = self.cpuMinerChanged.emit
+        self.gpuminers.onchange = self.gpuMinerChanged.emit
+
+        self.heartbeat = QTimer()
+        self.heartbeat.setInterval(5000)
+        self.heartbeat.timeout.connect(self.update)
+
+        self.paused = False
+
+        # --------------------------------------------------------------------------------------------------------------
+        if not elevated:
+            self.log("Warning: running without administrator priveleges may be detrimental to mining speed")
+
+    def start(self):
+        self.log("Starting")
+        self.loadconfig()
+        self.heartbeat.start()
+        self.update()
+
+    def update(self):
+        if not self.paused:
+            self.cpuminers.update()
+            self.gpuminers.update()
+
+    def loadconfig(self):
+        with open(self.config_path, encoding="utf-8") as f:
+            config_text = f.read()
+        config = yaml.safe_load(config_text)
+
+        addresses = config["addresses"]
+        for currency, value in addresses.items():
+            if value == "<your address here>":
+                raise InvalidConfigError(f"placeholder address for '{currency}' currency")
+        
+        self.cpuminers.loadconfig(config, "cpu")
+        self.gpuminers.loadconfig(config, "gpu")
+
+    def exit(self, code=0):
+        self.log("Exiting")
+        
+        self.cpuminers.stop()
+        self.gpuminers.stop()
+
+        QCoreApplication.instance().exit(code)
+
+    def format_log(self, *args):
+        timestamp = f"[{datetime.now().isoformat(' ', 'milliseconds')}] "
+        padding = " " * len(timestamp)
+        prefix = timestamp
+
+        for arg in args:
+            if isinstance(arg, BaseException):
+                external_lines = format_exception(None, arg, arg.__traceback__)
+                lines = (line for external_line in external_lines for line in external_line[:-1].splitlines())
+            else:
+                lines = str(arg).splitlines()
+        
+            for line in lines:
+                yield f"{prefix}{line}\n"
+                prefix = padding
+
+    def log(self, *args):
+        for line in self.format_log(*args):
+            print(line, end="")
+
+    def excepthook(self, etype, value, tb):
+        if isinstance(value, KeyboardInterrupt):
+            self.log("Keyboard interrupt received")
+            self.exit(0)
+        else:
+            self.log("Fatal exception raised:", value)
+            self.exit(1)
+
 
 # ======================================================================================================================
 def main():
@@ -133,7 +244,7 @@ def main():
 
         qapp = QCoreApplication([])
 
-        app = le.CliApplication(config_path)
+        app = CliApplication(config_path)
         app.start()
 
         return qapp.exec_()
