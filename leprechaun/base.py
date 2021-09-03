@@ -1,15 +1,18 @@
-import os
-from urllib.parse import urlparse
-from pathlib import Path
-from tempfile import TemporaryDirectory, NamedTemporaryFile
-import shutil
-from zipfile import ZipFile
-from tarfile import TarFile
-from contextlib import contextmanager
 import ctypes
-from calc import calc as calc_impl, default_identifiers
+import os
+import shutil
+from contextlib import contextmanager
+from functools import wraps
+from pathlib import Path
+from tarfile import TarFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from urllib.parse import urlparse
+from zipfile import ZipFile
+
 import requests
 from better_exceptions import ExceptionFormatter
+from calc import calc as calc_impl
+from calc import default_identifiers
 
 # OS utilities =========================================================================================================
 try:
@@ -42,12 +45,13 @@ def atleave(fn):
     finally:
         fn()
 
-def calc(expr, identifiers=None):
+@wraps(calc_impl)
+def calc(expr, identifiers=None, unary_operators=None, binary_operators=None):
     if not isinstance(expr, str):
         return expr
 
     identifiers = default_identifiers | (identifiers or {})
-    return calc_impl(expr, identifiers)
+    return calc_impl(expr, identifiers, unary_operators, binary_operators)
 
 # File handling utilities ==============================================================================================
 @contextmanager

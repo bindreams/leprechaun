@@ -1,9 +1,13 @@
-from abc import ABC, abstractmethod
-from datetime import datetime, date, time, timedelta
-from functools import reduce
 import operator
+from abc import ABC, abstractmethod
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal, getcontext
+from functools import reduce
+
 import win32api
-from .base import InvalidConfigError
+
+from .base import InvalidConfigError, calc
+
 
 def condition(data):
     if "conditions" in data or "conditions-and" in data:
@@ -26,16 +30,29 @@ class Condition(ABC):
 
 class WhenIdleCondition(Condition):
     def __init__(self, data):
-        if "idle-minutes" not in data:
-            raise InvalidConfigError("when-idle condition missing 'idle-minutes' field")
-        if data["idle-minutes"] <= 0:
-            raise InvalidConfigError(f"'idle-minutes' field must be above 0 (got '{data['idle-minutes']})'")
+        if "idle-time" not in data:
+            raise InvalidConfigError("when-idle condition missing 'idle-time' field")
 
-        self.seconds = data["idle-minutes"] * 60
+        # Using decimal here for precision and to track that a suffix was applied
+        getcontext().prec = 3
+        idle_time = calc(data["idle-time"], unary_operators={
+            ("s",  "postfix"): Decimal,
+            ("ms", "postfix"): lambda val: Decimal(val) / 1000,
+            ("m",  "postfix"): lambda val: Decimal(val) * 60,
+            ("h",  "postfix"): lambda val: Decimal(val) * 60 * 60,
+            ("d",  "postfix"): lambda val: Decimal(val) * 60 * 60 * 24,
+        })
+        if not isinstance(idle_time, Decimal):
+            raise InvalidConfigError("invalid type for 'idle-time' field (use ms, s, m, h, d suffixes to designate time)")
+
+        if idle_time <= 0:
+            raise InvalidConfigError(f"'idle-time' field must be above 0 (got '{data['idle-time']})'")
+
+        self.milliseconds = int(idle_time * 1000)
 
     def satisfied(self):
-        idle = (win32api.GetTickCount() - win32api.GetLastInputInfo()) / 1000.0
-        return idle >= self.seconds
+        idle = (win32api.GetTickCount() - win32api.GetLastInputInfo())
+        return idle >= self.milliseconds
 
 class ScheduleCondition(Condition):
     week = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
