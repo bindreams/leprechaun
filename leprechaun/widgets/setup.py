@@ -14,8 +14,10 @@ class Setup(QDialog):
         "start the miner with the 'Continue' button below.\n\n"
     )
 
-    def __init__(self, message, parent=None):
-        super().__init__(parent)
+    def __init__(self, app, message):
+        super().__init__()
+        self.app = app
+
         self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
 
         self.wlabel = QLabel(message)
@@ -70,19 +72,15 @@ class Setup(QDialog):
         ly.addLayout(lybuttons)
 
     def actionContinue(self):
-        app = le.Application()
-
         try:
-            app.loadconfig()
+            self.app.loadconfig()
         except (YamlParserError, InvalidConfigError, FileNotFoundError) as e:
             self.werrorlabel.setText(str(e))
         else:
             self.accept()
 
     def actionEditConfig(self):
-        app = le.Application()
-
-        app.actionEditConfig()
+        self.app.actionEditConfig()
         self.wbutton_continue.setEnabled(True)
         self.wbutton_continue.setDefault(True)
         self.wbutton_continue.setFocus()

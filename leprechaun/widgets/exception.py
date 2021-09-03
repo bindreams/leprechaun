@@ -4,8 +4,8 @@ from .base import rem
 
 
 class ExceptionMessageBox(QMessageBox):
-    def __init__(self, exception, parent=None):
-        super().__init__(parent)
+    def __init__(self, exception):
+        super().__init__()
         self.exception = exception
 
         self.setWindowTitle("Critical Error")

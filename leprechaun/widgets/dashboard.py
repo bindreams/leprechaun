@@ -46,8 +46,9 @@ class MinerStack(QListWidget):
     icon_broken      = None
     icon_paused      = None
 
-    def __init__(self, miners):
+    def __init__(self, app, miners):
         super().__init__()
+        self.app = app
         self.miners = miners
 
         for name in miners:
@@ -65,8 +66,6 @@ class MinerStack(QListWidget):
             MinerStack.icon_paused      = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
     
     def update(self):
-        app = le.Application()
-
         for i in range(self.count()):
             item = self.item(i)
             name = item.text()
@@ -78,7 +77,7 @@ class MinerStack(QListWidget):
                 item.setIcon(self.icon_broken)
             elif not miner.enabled:
                 item.setIcon(self.icon_disabled)
-            elif app.paused:
+            elif self.app.paused:
                 item.setIcon(self.icon_paused)
             elif not miner.allowed:
                 item.setIcon(self.icon_not_allowed)
@@ -94,8 +93,9 @@ class MinerStack(QListWidget):
 class Dashboard(QWidget):
     closed = Signal()
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.app = app
 
         moneyfont = font("Open Sans", size=2.25*rempt())
 
@@ -116,9 +116,8 @@ class Dashboard(QWidget):
         self.wpending.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
         # Miners
-        app = le.Application()
-        self.wcpuminers = MinerStack(app.cpuminers)
-        self.wgpuminers = MinerStack(app.gpuminers)
+        self.wcpuminers = MinerStack(app, app.cpuminers)
+        self.wgpuminers = MinerStack(app, app.gpuminers)
 
         # Layout -------------------------------------------------------------------------------------------------------
         ly = QGridLayout()
@@ -135,8 +134,6 @@ class Dashboard(QWidget):
         ly.addWidget(self.wgpuminers, 3, 1)
     
     def update(self):
-        app = le.Application()
-
         self.wcpuminers.update()
         self.wgpuminers.update()
 
@@ -148,7 +145,7 @@ class Dashboard(QWidget):
         etotal = 0
         epending = 0
 
-        for miner in chain(app.cpuminers.values(), app.gpuminers.values()):
+        for miner in chain(self.app.cpuminers.values(), self.app.gpuminers.values()):
             try:
                 earnings = miner.earnings()
                 currency = miner.currency
@@ -171,7 +168,7 @@ class Dashboard(QWidget):
                 etotal += earnings["total"] * price
                 epending += earnings["pending"] * price
             except OSError as e:
-                app.log(f"Exception raised while getting earnings of miner '{miner.name}':", e)
+                self.app.log(f"Exception raised while getting earnings of miner '{miner.name}':", e)
                 return  # Skip setting earnings
         
         self.wtotal.setText(f"${etotal:,.2f}")
@@ -179,9 +176,8 @@ class Dashboard(QWidget):
     
     def closeEvent(self, event):
         super().closeEvent(event)
+        self.app.dashboard = None
         self.deleteLater()
-        app = le.Application()
-        app.dashboard = None
 
     def sizeHint(self):
         return QSize(rem()*30, rem()*20)

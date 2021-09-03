@@ -1,11 +1,11 @@
 import sys
 from PySide2.QtWidgets import QApplication
-import leprechaun as le
+from leprechaun.application import Application
 
 def main():
     qapp = QApplication([])
 
-    app = le.Application()
+    app = Application()
     app.start()
 
     return qapp.exec_()

@@ -17,19 +17,7 @@ from .widgets import Dashboard, ExceptionMessageBox, Setup
 from .miners import MinerStack
 
 
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
-class ApplicationMetaclass(Singleton, type(QObject)):
-    pass
-
-
-class CliApplication(QObject, metaclass=ApplicationMetaclass):
+class CliApplication(QObject):
     cpuMinerChanged = Signal(str)
     gpuMinerChanged = Signal(str)
 
@@ -53,8 +41,8 @@ class CliApplication(QObject, metaclass=ApplicationMetaclass):
         qapp.setApplicationName("leprechaun")
 
         # Miners -------------------------------------------------------------------------------------------------------
-        self.cpuminers = MinerStack()
-        self.gpuminers = MinerStack()
+        self.cpuminers = MinerStack(self)
+        self.gpuminers = MinerStack(self)
         self.cpuminers.onchange = self.cpuMinerChanged.emit
         self.gpuminers.onchange = self.gpuMinerChanged.emit
 
@@ -194,12 +182,12 @@ class Application(CliApplication):
         except FileNotFoundError:
             shutil.copy(le.sdata_dir / "leprechaun-template.yml", self.config_path)
         
-            dialog = Setup(Setup.welcome_message)
+            dialog = Setup(self, Setup.welcome_message)
             if dialog.exec_() == QDialog.Rejected:
                 QApplication.instance().exit()
                 return
         except (YamlParserError, InvalidConfigError) as e:
-            dialog = Setup("There has been an error loading the configuration file.")
+            dialog = Setup(self, "There has been an error loading the configuration file.")
             dialog.werrorlabel.setText(str(e))
             if dialog.exec_() == QDialog.Rejected:
                 QApplication.instance().exit()
@@ -232,7 +220,7 @@ class Application(CliApplication):
 
     def actionOpenDashboard(self):
         if self.dashboard is None:
-            self.dashboard = Dashboard()
+            self.dashboard = Dashboard(self)
         self.dashboard.update()
 
         self.dashboard.show()

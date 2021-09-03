@@ -22,8 +22,9 @@ class MinerStack(MutableMapping):
 
     perms = win32con.PROCESS_TERMINATE | win32con.PROCESS_SET_QUOTA
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.app = app
 
         self.miners: dict[str, Miner] = {}
         self.active_name: Optional[str] = None
@@ -69,8 +70,7 @@ class MinerStack(MutableMapping):
                 for line in active.log:
                     f.write(line + "\n")
             
-            app = le.Application()
-            app.log(f"Miner '{active.name}' stopped unexpectedly.\nMiner log available as '{log_filename}'")
+            self.app.log(f"Miner '{active.name}' stopped unexpectedly.\nMiner log available as '{log_filename}'")
 
         for name, miner in self.items():
             if miner.enabled and miner.allowed and not miner.broken:
