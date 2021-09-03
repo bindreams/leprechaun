@@ -6,10 +6,18 @@ import shutil
 from zipfile import ZipFile
 from tarfile import TarFile
 from contextlib import contextmanager
+import ctypes
 from calc import calc as calc_impl, default_identifiers
 import requests
 from better_exceptions import ExceptionFormatter
 
+# OS utilities =========================================================================================================
+try:
+    elevated = (os.getuid() == 0)
+except AttributeError:
+    elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+# Exceptions ===========================================================================================================
 class InvalidConfigError(ValueError):
     pass
 
@@ -17,6 +25,7 @@ _exception_formatter = ExceptionFormatter(colored=False, max_length=None)
 def format_exception(exc, value, tb):
     return list(_exception_formatter.format_exception(exc, value, tb))
 
+# Misc utilities =======================================================================================================
 @contextmanager
 def atleave(fn):
     """Use during `with` statement to call something at the end regardless of exceptions.
@@ -33,6 +42,14 @@ def atleave(fn):
     finally:
         fn()
 
+def calc(expr, identifiers=None):
+    if not isinstance(expr, str):
+        return expr
+
+    identifiers = default_identifiers | (identifiers or {})
+    return calc_impl(expr, identifiers)
+
+# File handling utilities ==============================================================================================
 @contextmanager
 def ClosedNamedTemporaryFile(*, suffix=None, prefix=None, dir=None, errors=None):
     tf = NamedTemporaryFile(suffix=suffix, prefix=prefix, dir=dir, errors=errors, delete=False)
@@ -41,13 +58,6 @@ def ClosedNamedTemporaryFile(*, suffix=None, prefix=None, dir=None, errors=None)
         yield tf.name
     finally:
         os.unlink(tf.name)
-
-def calc(expr, identifiers=None):
-    if not isinstance(expr, str):
-        return expr
-
-    identifiers = default_identifiers | (identifiers or {})
-    return calc_impl(expr, identifiers)
 
 def download_and_extract(url, dest, callback=None, *, format=None, if_exists=False, remove_nested=False):
     """Download a zip or tar archive and unpack it into a specified folder.

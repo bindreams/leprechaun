@@ -1,20 +1,12 @@
 import sys
-import os
-import ctypes
 from argparse import ArgumentParser
 from pathlib import Path
 import subprocess as sp
-from warnings import warn
-
+from PySide2.QtCore import QCoreApplication
 import leprechaun as le
+from leprechaun.base import elevated
 
-
-try:
-    elevated = (os.getuid() == 0)
-except AttributeError:
-    elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
-
-
+# CLI argument parser ==================================================================================================
 def _get_parser():
     parser = ArgumentParser("leprechaun", description="A tiny crypto miner program that lives in your system tray.")
 
@@ -61,6 +53,7 @@ def _get_parser():
 
 parser = _get_parser()
 
+# Config functions =====================================================================================================
 def add_shortcuts():
     script = """
         $WshShell = New-Object -ComObject WScript.Shell
@@ -111,11 +104,13 @@ def add_security_exception():
     script = f"Add-MpPreference -ExclusionPath {le.data_dir}"
     sp.run(["powershell.exe", "-Command", script], check=True)
 
+# ======================================================================================================================
 def main():
     """Run Leprechaun."""
     args = parser.parse_args()
 
     if args.subcommand == "config":
+        # Configure ----------------------------------------------------------------------------------------------------
         if args.add_scheduled_task:
             if not elevated:
                 parser.error("supplied arguments require administrator priveleges")
@@ -129,17 +124,19 @@ def main():
         if args.add_shortcuts:
             add_shortcuts()
 
-        return 0
-        
-    if args.subcommand == "run":
-        config_path=args.file
     else:
-        config_path=None
+        # Launch application -------------------------------------------------------------------------------------------
+        if args.subcommand == "run":
+            config_path=args.file
+        else:
+            config_path=None
 
-    if not elevated:
-        warn("Running without administrator priveleges may be detrimental to mining speed")
-    app = le.Application(config_path)
-    return app.exec()
+        qapp = QCoreApplication([])
+
+        app = le.CliApplication(config_path)
+        app.start()
+
+        return qapp.exec_()
 
 if __name__ == "__main__":
     sys.exit(main())
