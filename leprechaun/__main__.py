@@ -6,6 +6,7 @@ from PySide2.QtCore import QTimer
 from PySide2.QtGui import QFontDatabase, QIcon
 from PySide2.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
 from yaml.parser import ParserError as YamlParserError
+from yaml.scanner import ScannerError as YamlScannerError
 
 import leprechaun as le
 from leprechaun import notepad
@@ -83,7 +84,7 @@ class Application(CliApplication):
             if dialog.exec_() == QDialog.Rejected:
                 QApplication.instance().exit()
                 return
-        except (YamlParserError, InvalidConfigError) as e:
+        except (YamlScannerError, YamlParserError, InvalidConfigError) as e:
             dialog = Setup(self, "There has been an error loading the configuration file.")
             dialog.werrorlabel.setText(str(e))
             if dialog.exec_() == QDialog.Rejected:

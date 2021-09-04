@@ -1,10 +1,12 @@
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialog, QWidget, QLabel, QProgressBar, QApplication, QVBoxLayout, QFrame, QDialogButtonBox, QPushButton, QSizePolicy, QHBoxLayout, QButtonGroup
-from .base import rem, font
+from .base import rem, rempt, font
 import leprechaun as le
 from leprechaun.base import download, extract, InvalidConfigError
 from concurrent.futures import ThreadPoolExecutor
 from yaml.parser import ParserError as YamlParserError
+from yaml.scanner import ScannerError as YamlScannerError
+
 
 class Setup(QDialog):
     welcome_message = (
@@ -24,9 +26,9 @@ class Setup(QDialog):
         self.wlabel.setWordWrap(True)
 
         self.werrorlabel = QLabel()
-        self.werrorlabel.setFont(font("Consolas"))
+        self.werrorlabel.setFont(font("Consolas", size=rempt() * 1.2))
         self.werrorlabel.setWordWrap(True)
-        self.werrorlabel.setStyleSheet("QLabel {color: red;}")
+        self.werrorlabel.setStyleSheet("color: #cc0000")
 
         self.wdocumentationlabel = QLabel("<a href=\"https://github.com/andreasxp/leprechaun#configuration\">Config file documentation</a>")
         self.wdocumentationlabel.setTextFormat(Qt.RichText)
@@ -74,7 +76,7 @@ class Setup(QDialog):
     def actionContinue(self):
         try:
             self.app.loadconfig()
-        except (YamlParserError, InvalidConfigError, FileNotFoundError) as e:
+        except (YamlScannerError, YamlParserError, InvalidConfigError, FileNotFoundError) as e:
             self.werrorlabel.setText(str(e))
         else:
             self.accept()
