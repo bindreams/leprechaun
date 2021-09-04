@@ -1,7 +1,9 @@
 from itertools import chain
 from PySide2.QtCore import Qt, Signal, QSize
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QGridLayout, QLabel, QWidget, QTextEdit, QFrame, QListWidget
+from PySide2.QtWidgets import (
+    QGridLayout, QLabel, QWidget, QTextEdit, QFrame, QTreeWidget, QTreeWidgetItem, QStyledItemDelegate, QStyle
+)
 import leprechaun as le
 from leprechaun.api import minerstat
 from .base import font, defaultfont, rem, rempt
@@ -10,9 +12,9 @@ from .base import font, defaultfont, rem, rempt
 class Log(QTextEdit):
     _registry = {}
 
-    def __init__(self, name, miner):
+    def __init__(self, miner):
         super().__init__()
-        self.setWindowTitle(f"Log file for miner '{name}'")
+        self.setWindowTitle(f"Log file for miner '{miner.name}'")
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
         self.setFontFamily("Consolas")
@@ -38,7 +40,7 @@ class Log(QTextEdit):
         self._registry.pop(id(self))
 
 
-class MinerStack(QListWidget):
+class MinerTree(QTreeWidget):
     icon_ready       = None
     icon_running     = None
     icon_not_allowed = None
@@ -46,47 +48,78 @@ class MinerStack(QListWidget):
     icon_broken      = None
     icon_paused      = None
 
-    def __init__(self, app, miners):
+    class ItemDelegate(QStyledItemDelegate):
+        def paint(self, painter, option, index):
+            #create a styled option object
+            super().initStyleOption(option, index)
+
+            style = option.widget.style()
+            indent = option.widget.indentation()
+
+            #draw indented item
+            option.rect.setLeft(indent)
+            style.drawControl(QStyle.CE_ItemViewItem, option, painter, option.widget)
+
+    def __init__(self, app):
         super().__init__()
         self.app = app
-        self.miners = miners
 
-        for name in miners:
-            self.addItem(name)
+        self.wicpuminers = QTreeWidgetItem()
+        self.wigpuminers = QTreeWidgetItem()
+        self.addTopLevelItems([self.wicpuminers, self.wigpuminers])
 
-        self.setIconSize(QSize(rem()*2, rem()*2))
+        self.wicpuminers.setText(0, "CPU Miners")
+        self.wicpuminers.setExpanded(True)
+        for name in app.cpuminers:
+            wi = QTreeWidgetItem()
+            wi.setText(0, name)
+            self.wicpuminers.addChild(wi)
+
+        self.wigpuminers.setText(0, "GPU Miners")
+        self.wigpuminers.setExpanded(True)
+        for name in app.gpuminers:
+            wi = QTreeWidgetItem()
+            wi.setText(0, name)
+            self.wigpuminers.addChild(wi)
+
+        self.setHeaderHidden(True)
+        self.setIconSize(QSize(rem()*1.6, rem()*1.6))
         self.itemDoubleClicked.connect(self.onItemDoubleClicked)
+        self.setItemDelegate(self.ItemDelegate())
 
         if self.icon_ready is None:
-            MinerStack.icon_ready       = QIcon(str(le.sdata_dir / "icons" / "status-ready.svg"))
-            MinerStack.icon_running     = QIcon(str(le.sdata_dir / "icons" / "status-running.svg"))
-            MinerStack.icon_not_allowed = QIcon(str(le.sdata_dir / "icons" / "status-not-allowed.svg"))
-            MinerStack.icon_disabled    = QIcon(str(le.sdata_dir / "icons" / "status-disabled.svg"))
-            MinerStack.icon_broken      = QIcon(str(le.sdata_dir / "icons" / "status-broken.svg"))
-            MinerStack.icon_paused      = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
+            MinerTree.icon_ready       = QIcon(str(le.sdata_dir / "icons" / "status-ready.svg"))
+            MinerTree.icon_running     = QIcon(str(le.sdata_dir / "icons" / "status-running.svg"))
+            MinerTree.icon_not_allowed = QIcon(str(le.sdata_dir / "icons" / "status-not-allowed.svg"))
+            MinerTree.icon_disabled    = QIcon(str(le.sdata_dir / "icons" / "status-disabled.svg"))
+            MinerTree.icon_broken      = QIcon(str(le.sdata_dir / "icons" / "status-broken.svg"))
+            MinerTree.icon_paused      = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
 
     def update(self):
-        for i in range(self.count()):
-            item = self.item(i)
-            name = item.text()
-            miner = self.miners[name]
+        for name, miner in chain(self.app.cpuminers.items(), self.app.gpuminers.items()):
+            item = self.findItems(name, Qt.MatchExactly | Qt.MatchRecursive)[0]
 
             if miner.running:
-                item.setIcon(self.icon_running)
+                item.setIcon(0, self.icon_running)
             elif miner.broken:
-                item.setIcon(self.icon_broken)
+                item.setIcon(0, self.icon_broken)
             elif not miner.enabled:
-                item.setIcon(self.icon_disabled)
+                item.setIcon(0, self.icon_disabled)
             elif self.app.paused:
-                item.setIcon(self.icon_paused)
+                item.setIcon(0, self.icon_paused)
             elif not miner.allowed:
-                item.setIcon(self.icon_not_allowed)
+                item.setIcon(0, self.icon_not_allowed)
             else:
-                item.setIcon(self.icon_ready)
+                item.setIcon(0, self.icon_ready)
 
     def onItemDoubleClicked(self, item):
-        name = item.text()
-        wlog = Log(name, self.miners[name])
+        name = item.text(0)
+
+        if item.parent() == self.wicpuminers:
+            wlog = Log(self.app.cpuminers[name])
+        elif item.parent() == self.wigpuminers:
+            wlog = Log(self.app.gpuminers[name])
+
         wlog.show()
 
 
@@ -125,29 +158,26 @@ class Dashboard(QWidget):
         self.wcredits.setFont(defaultfont())
 
         # Miners
-        self.wcpuminers = MinerStack(app, app.cpuminers)
-        self.wgpuminers = MinerStack(app, app.gpuminers)
+        self.wminertree = MinerTree(app)
 
         # Layout -------------------------------------------------------------------------------------------------------
         ly = QGridLayout()
         self.setLayout(ly)
 
         ly.addWidget(QLabel("Total earnings:"), 0, 0)
-        ly.addWidget(QLabel("Pending:"), 0, 1)
         ly.addWidget(self.wtotal, 1, 0)
-        ly.addWidget(self.wpending, 1, 1)
 
-        ly.addWidget(QLabel("CPU Miners:"), 2, 0)
-        ly.addWidget(QLabel("GPU Miners:"), 2, 1)
-        ly.addWidget(self.wcpuminers, 3, 0)
-        ly.addWidget(self.wgpuminers, 3, 1)
+        ly.addWidget(QLabel("Pending:"), 2, 0)
+        ly.addWidget(self.wpending, 3, 0)
 
-        ly.addWidget(self.wcredits, 4, 0, 1, 2)
+        ly.addWidget(self.wminertree, 0, 1, 5, 1)
+        ly.setRowStretch(4, 1)
+
+        ly.addWidget(self.wcredits, 5, 0, 1, 2)
         ly.setAlignment(self.wcredits, Qt.AlignHCenter)
 
     def update(self):
-        self.wcpuminers.update()
-        self.wgpuminers.update()
+        self.wminertree.update()
 
         known_ids = set()
 
@@ -196,4 +226,4 @@ class Dashboard(QWidget):
         self.deleteLater()
 
     def sizeHint(self):
-        return QSize(rem()*30, rem()*20)
+        return QSize(rem()*27, rem()*25)
