@@ -3,8 +3,8 @@ from PySide2.QtCore import Qt, Signal, QSize
 from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import QGridLayout, QLabel, QWidget, QTextEdit, QFrame, QListWidget
 import leprechaun as le
-from leprechaun.api.messari import usdprice
-from .base import font, rem, rempt
+from leprechaun.api import minerstat
+from .base import font, defaultfont, rem, rempt
 
 
 class Log(QTextEdit):
@@ -115,6 +115,15 @@ class Dashboard(QWidget):
         self.wpending.setAlignment(Qt.AlignCenter)
         self.wpending.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
+        # Footer
+        self.wcredits = QLabel()
+        self.wcredits.setStyleSheet("color: #808080")
+        self.wcredits.setText("Currency information provided by <a href=\"https://minerstat.com/\"><span style=\"color:#808080;\">minerstat</span>")
+        self.wcredits.setTextFormat(Qt.RichText)
+        self.wcredits.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.wcredits.setOpenExternalLinks(True)
+        self.wcredits.setFont(defaultfont())
+
         # Miners
         self.wcpuminers = MinerStack(app, app.cpuminers)
         self.wgpuminers = MinerStack(app, app.gpuminers)
@@ -133,6 +142,9 @@ class Dashboard(QWidget):
         ly.addWidget(self.wcpuminers, 3, 0)
         ly.addWidget(self.wgpuminers, 3, 1)
 
+        ly.addWidget(self.wcredits, 4, 0, 1, 2)
+        ly.setAlignment(self.wcredits, Qt.AlignHCenter)
+
     def update(self):
         self.wcpuminers.update()
         self.wgpuminers.update()
@@ -142,6 +154,10 @@ class Dashboard(QWidget):
         self.wtotal.setText("$--.--")
         self.wpending.setText("$--.--")
 
+        currencies = {miner.currency for miner in chain(self.app.cpuminers.values(), self.app.gpuminers.values())}
+        stats = minerstat.stats(currencies)
+        stats = {stat["coin"]: stat for stat in stats}
+
         etotal = 0
         epending = 0
 
@@ -149,7 +165,7 @@ class Dashboard(QWidget):
             try:
                 earnings = miner.earnings()
                 currency = miner.currency
-                price = usdprice(currency)
+                price = stats[currency]["price"]
 
                 if earnings["scope"] == "currency":
                     earnings_id = (currency,)
