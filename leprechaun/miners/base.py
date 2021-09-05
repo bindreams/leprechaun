@@ -64,16 +64,16 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
 
     # Abstract methods =================================================================================================
     @abstractmethod
-    def earnings(self) -> dict:
-        """Return earnings from this miner as a dict.
-        The dict must contain the following fields: `total`, `pending`, `scope`.
-        The `scope` field scecifies, to how many miners this statistic applies. Variants are: "miner" for only this
-        miner, "currency" for all miners of this currency, "address" for all miners for this address, or "with-id" for
-        all miners with the same `id` field.
-        The `total` and `pending` values need to be in miner's currency.
+    def hashrate(self):
+        """Miner hashrate, adjusted for backend and pool fees."""
 
-        Note: all miners for one currency should return the same value for `scope`.
-        """
+    @abstractmethod
+    def earnings_total(self):
+        """Total earnings for this address."""
+
+    @abstractmethod
+    def earnings_pending(self):
+        """Pending earnings for this address."""
 
     @abstractmethod
     def args(self):

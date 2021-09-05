@@ -1,4 +1,5 @@
 import multiprocessing
+import re
 
 import leprechaun as le
 from leprechaun.base import InvalidConfigError, calc, download_and_extract
@@ -12,6 +13,9 @@ class XmrMiner(Miner):
         f"https://github.com/xmrig/xmrig/releases/download/v{miner_version}/xmrig-{miner_version}-msvc-win64.zip"
     miner_dir = le.miners_dir / f"xmrig-{miner_version}"
     miner_exe = miner_dir / "xmrig.exe"
+
+    re_hashrate = \
+        re.compile(r"\[\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\]  miner    speed 10s\/60s\/15m (\d+.\d|n\/a) (\d+.\d|n\/a) (\d+.\d|n\/a) H\/s")
 
     def __init__(self, name, data, config):
         super().__init__(name, data, config)
@@ -59,12 +63,26 @@ class XmrMiner(Miner):
             "-k", "--tls", "--no-color"
         ]
 
-    def earnings(self):
-        paid = totalpaid(self.address)
-        pending = totaldue(self.address)
+    def hashrate(self):
+        fee_coef = 0.99 * 0.994  # Adjust for miner fee, then pool fee
 
-        return {
-            "total": paid + pending,
-            "pending": pending,
-            "scope": "address"
-        }
+        for line in reversed(self.log):
+            m = re.match(self.re_hashrate, line)
+
+            if not m:
+                continue
+
+            if m.group(3) != "n/a":
+                return float(m.group(3)) * fee_coef
+            if m.group(2) != "n/a":
+                return float(m.group(2)) * fee_coef
+            if m.group(1) != "n/a":
+                return float(m.group(1)) * fee_coef
+
+        return None
+
+    def earnings_total(self):
+        return totalpaid(self.address) + totaldue(self.address)
+
+    def earnings_pending(self):
+        return totaldue(self.address)

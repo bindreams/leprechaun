@@ -1,12 +1,14 @@
 from itertools import chain
-from PySide2.QtCore import Qt, Signal, QSize
+from concurrent.futures import ThreadPoolExecutor
+
+from PySide2.QtCore import QSize, Qt, Signal
 from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import (
-    QGridLayout, QLabel, QWidget, QTextEdit, QFrame, QTreeWidget, QTreeWidgetItem, QStyledItemDelegate, QStyle
+    QFrame, QGridLayout, QLabel, QStyle, QStyledItemDelegate, QTextEdit, QTreeWidget, QTreeWidgetItem, QWidget
 )
+
 import leprechaun as le
-from leprechaun.api import minerstat
-from .base import font, defaultfont, rem, rempt
+from .base import defaultfont, font, rem, rempt
 
 
 class Log(QTextEdit):
@@ -136,17 +138,23 @@ class Dashboard(QWidget):
         f.setPointSizeF(1.2*rempt())
         self.setFont(f)
 
-        self.wtotal = QLabel()
+        self.wtotal = QLabel("$‒‒.‒‒")
         self.wtotal.setStyleSheet("padding: 0 0.5em 0 0.5em")
         self.wtotal.setFont(moneyfont)
         self.wtotal.setAlignment(Qt.AlignCenter)
         self.wtotal.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
-        self.wpending = QLabel()
+        self.wpending = QLabel("$‒‒.‒‒")
         self.wpending.setStyleSheet("padding: 0 0.5em 0 0.5em")
         self.wpending.setFont(moneyfont)
         self.wpending.setAlignment(Qt.AlignCenter)
         self.wpending.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+
+        self.wdaily = QLabel("$‒‒.‒‒")
+        self.wdaily.setStyleSheet("padding: 0 0.5em 0 0.5em")
+        self.wdaily.setFont(moneyfont)
+        self.wdaily.setAlignment(Qt.AlignCenter)
+        self.wdaily.setFrameStyle(QFrame.Panel | QFrame.Sunken)
 
         # Footer
         self.wcredits = QLabel()
@@ -160,6 +168,10 @@ class Dashboard(QWidget):
         # Miners
         self.wminertree = MinerTree(app)
 
+        # Dashboard async updater
+        self.executor_earnings = ThreadPoolExecutor(max_workers=1)
+        self.future_earnings = None
+
         # Layout -------------------------------------------------------------------------------------------------------
         ly = QGridLayout()
         self.setLayout(ly)
@@ -167,58 +179,41 @@ class Dashboard(QWidget):
         ly.addWidget(QLabel("Total earnings:"), 0, 0)
         ly.addWidget(self.wtotal, 1, 0)
 
-        ly.addWidget(QLabel("Pending:"), 2, 0)
-        ly.addWidget(self.wpending, 3, 0)
+        ly.addWidget(QLabel("Daily earnings:"), 2, 0)
+        ly.addWidget(self.wdaily, 3, 0)
 
-        ly.addWidget(self.wminertree, 0, 1, 5, 1)
-        ly.setRowStretch(4, 1)
+        ly.addWidget(QLabel("Pending:"), 4, 0)
+        ly.addWidget(self.wpending, 5, 0)
 
-        ly.addWidget(self.wcredits, 5, 0, 1, 2)
+        ly.addWidget(self.wminertree, 0, 1, 7, 1)
+        ly.setRowStretch(6, 1)
+
+        ly.addWidget(self.wcredits, 7, 0, 1, 2)
         ly.setAlignment(self.wcredits, Qt.AlignHCenter)
 
     def update(self):
         self.wminertree.update()
 
-        known_ids = set()
+        if self.future_earnings is None:
+            # Asynchronously query earnings from all miners
+            self.future_earnings = self.executor_earnings.submit(self.app.earnings)
+        elif self.future_earnings.done():
+            # If already queried and completed, process them
+            self.wtotal.setText("$‒‒.‒‒")
+            self.wpending.setText("$‒‒.‒‒")
+            self.wdaily.setText("$‒‒.‒‒")
 
-        self.wtotal.setText("$--.--")
-        self.wpending.setText("$--.--")
-
-        currencies = {miner.currency for miner in chain(self.app.cpuminers.values(), self.app.gpuminers.values())}
-        stats = minerstat.stats(currencies)
-        stats = {stat["coin"]: stat for stat in stats}
-
-        etotal = 0
-        epending = 0
-
-        for miner in chain(self.app.cpuminers.values(), self.app.gpuminers.values()):
             try:
-                earnings = miner.earnings()
-                currency = miner.currency
-                price = stats[currency]["price"]
+                earnings = self.future_earnings.result()
+                self.wtotal.setText(f"${earnings.total:,.2f}")
+                self.wpending.setText(f"${earnings.pending:,.2f}")
 
-                if earnings["scope"] == "currency":
-                    earnings_id = (currency,)
+                if earnings.daily is not None:
+                    self.wdaily.setText(f"${earnings.daily:,.2f}")
+            except RuntimeError as e:
+                self.app.log("Exception while updating dashboard earnings:", e)
 
-                if earnings["scope"] == "address":
-                    earnings_id = (currency, miner.address)
-
-                if earnings["scope"] == "with-id":
-                    earnings_id = earnings["id"]
-
-                if earnings_id in known_ids:
-                    continue
-
-                known_ids.add(earnings_id)
-
-                etotal += earnings["total"] * price
-                epending += earnings["pending"] * price
-            except OSError as e:
-                self.app.log(f"Exception raised while getting earnings of miner '{miner.name}':", e)
-                return  # Skip setting earnings
-
-        self.wtotal.setText(f"${etotal:,.2f}")
-        self.wpending.setText(f"${epending:,.2f}")
+            self.future_earnings = self.executor_earnings.submit(self.app.earnings)
 
     def closeEvent(self, event):
         super().closeEvent(event)

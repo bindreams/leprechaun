@@ -1,13 +1,16 @@
 import subprocess as sp
 import sys
 from argparse import ArgumentParser
+from collections import namedtuple
 from datetime import datetime
+from itertools import chain
 from pathlib import Path
 
 import yaml
 from PySide2.QtCore import QCoreApplication, QObject, QTimer, Signal
 
 import leprechaun as le
+from leprechaun.api import minerstat
 from leprechaun.base import InvalidConfigError, elevated, format_exception
 from leprechaun.miners import MinerStack
 
@@ -115,6 +118,8 @@ def add_security_exception():
 
 
 # CliApplication =======================================================================================================
+Earnings = namedtuple("Earnings", ["total", "pending", "daily"])
+
 class CliApplication(QObject):
     cpuMinerChanged = Signal(str)
     gpuMinerChanged = Signal(str)
@@ -177,6 +182,49 @@ class CliApplication(QObject):
 
         self.cpuminers.loadconfig(config, "cpu")
         self.gpuminers.loadconfig(config, "gpu")
+
+    def earnings(self) -> Earnings:
+        """Calculate earnings in USD from all miners.
+
+        Returns a named tuple with properties `total`, `pending`, and `daily`. `daily` can be None if not possible to
+        calculate at the moment.
+        """
+        currencies = {miner.currency for miner in chain(self.cpuminers.values(), self.gpuminers.values())}
+        try:
+            info = minerstat.stats(currencies)
+        except OSError as e:
+            raise RuntimeError("could not get currency information from minerstat") from e
+        info = {coin["coin"]: coin for coin in info}
+
+        used_addresses = set()
+        total = 0
+        pending = 0
+        daily = 0
+
+        for miner in chain(self.cpuminers.values(), self.gpuminers.values()):
+            currency = miner.currency
+            address = miner.address
+            price = info[currency]["price"]
+            reward = info[currency]["reward"]  # Reward in coins per 1 H/s for one hour
+            if info[currency]["reward_unit"] != currency:
+                raise RuntimeError("rewards in units that are not this currency are not supported")
+
+            try:
+                if miner.running:
+                    hashrate = miner.hashrate()
+                    if hashrate is None:
+                        daily = None
+                    elif daily is not None:
+                        daily += miner.hashrate() * reward * price * 24
+
+                if (currency, address) not in used_addresses:
+                    total += miner.earnings_total() * price
+                    pending += miner.earnings_pending() * price
+                    used_addresses.add((currency, address))
+            except OSError as e:
+                raise RuntimeError(f"could not get earnings of miner '{miner.name}'") from e
+
+        return Earnings(total, pending, daily)
 
     def exit(self, code=0):
         self.log("Exiting")

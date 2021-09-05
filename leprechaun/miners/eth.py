@@ -2,6 +2,7 @@ import leprechaun as le
 from leprechaun.base import InvalidConfigError, download_and_extract
 from leprechaun.api.ethermine import totaldue, totalpaid
 from .base import Miner
+import re
 
 
 class EthMiner(Miner):
@@ -16,6 +17,9 @@ class EthMiner(Miner):
         f"https://github.com/no-fee-ethereum-mining/nsfminer/releases/download/v{nsfminer_version}/nsfminer_{nsfminer_version}-windows_10-cuda_11.3-opencl.zip"
     nsfminer_dir = le.miners_dir / f"nsfminer-{nsfminer_version}"
     nsfminer_exe = nsfminer_dir / "nsfminer.exe"
+
+    re_trex_hashrate = re.compile(r"(\d+\.\d\d) MH\/s")
+    re_ethminer_hashrate = re.compile(r"(\d+\.\d\d) (h|Kh|Mh)")
 
     def __init__(self, name, data, config):
         super().__init__(name, data, config)
@@ -46,12 +50,34 @@ class EthMiner(Miner):
             "--nocolor"
         ]
 
-    def earnings(self):
-        paid = totalpaid(self.address)
-        pending = totaldue(self.address)
+    def hashrate(self):
+        for line in reversed(self.log):
+            if self.backend == "t-rex":
+                m = re.search(self.re_trex_hashrate, line)
+                if not m:
+                    continue
 
-        return {
-            "total": paid + pending,
-            "pending": pending,
-            "scope": "address"
-        }
+                hashrate = float(m.group(1)) * 10**6
+                return hashrate * 0.99 * 0.99  # Adjust for miner fee, then pool fee
+            else:
+                m = re.search(self.re_ethminer_hashrate, line)
+                if not m:
+                    continue
+
+                if m.group(2) == "h":
+                    power = 0
+                elif m.group(2) == "Kh":
+                    power = 3
+                elif m.group(2) == "Mh":
+                    power = 6
+
+                hashrate = float(m.group(1)) * 10**power
+                return hashrate * 0.99  # Adjust for pool fee
+
+        return None
+
+    def earnings_total(self):
+        return totalpaid(self.address) + totaldue(self.address)
+
+    def earnings_pending(self):
+        return totaldue(self.address)
