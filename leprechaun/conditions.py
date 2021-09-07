@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal, getcontext
 from functools import reduce
 
-import win32api
+from idle import idle
 
 from .base import InvalidConfigError, calc
 
@@ -28,6 +28,7 @@ class Condition(ABC):
     def satisfied(self) -> bool:
         pass
 
+
 class WhenIdleCondition(Condition):
     def __init__(self, data):
         if "idle-time" not in data:
@@ -48,11 +49,11 @@ class WhenIdleCondition(Condition):
         if idle_time <= 0:
             raise InvalidConfigError(f"'idle-time' field must be above 0 (got '{data['idle-time']})'")
 
-        self.milliseconds = int(idle_time * 1000)
+        self.timeout = float(idle_time)
 
     def satisfied(self):
-        idle = (win32api.GetTickCount() - win32api.GetLastInputInfo())
-        return idle >= self.milliseconds
+        return idle() >= self.timeout
+
 
 class ScheduleCondition(Condition):
     week = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]

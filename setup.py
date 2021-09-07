@@ -7,8 +7,9 @@ install_requires = [
     "pyyaml",
     "PySide2",
     "pyinstaller",
-    "better_exceptions"
-    "calc @ https://github.com/andreasxp/calc/archive/refs/heads/main.zip"
+    "better_exceptions",
+    "calc @ https://github.com/andreasxp/calc/archive/refs/heads/main.zip",
+    "idle @ https://github.com/andreasxp/idle/archive/refs/heads/main.zip"
 ]
 
 entry_points = {
