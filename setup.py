@@ -15,7 +15,7 @@ install_requires = [
 
 entry_points = {
     "gui_scripts": ["leprechaun = leprechaun.__main__:main"],
-    "console_scripts": ["leprechaun-cli = leprechaun_cli:main"],
+    "console_scripts": ["leprechaun-cli = leprechaun.cli:main"],
 }
 
 setup(
