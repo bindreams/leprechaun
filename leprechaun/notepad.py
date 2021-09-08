@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess as sp
 from time import sleep
-from leprechaun.base import download_and_extract
+from leprechaun.util import download_and_extract
 
 version = "1.59.1"
 url = f"https://github.com/VSCodium/vscodium/releases/download/{version}/VSCodium-win32-x64-{version}.zip"

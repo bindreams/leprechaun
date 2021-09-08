@@ -6,7 +6,7 @@ from functools import reduce
 
 from idle import idle
 
-from .base import InvalidConfigError, calc
+from .util import InvalidConfigError, calc
 
 
 def condition(data):

@@ -7,7 +7,7 @@ import subprocess as sp
 
 from PySide2.QtCore import QObject, Signal
 
-from leprechaun.base import InvalidConfigError
+from leprechaun.util import InvalidConfigError, popen
 from leprechaun.conditions import condition
 
 
@@ -104,8 +104,8 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
     # Actions ==========================================================================================================
     def start(self):
         if not self.running:
-            self.running_process = sp.Popen(self.args() + self.extra_backend_args,
-                stdin=sp.DEVNULL,
+            self.running_process = popen(self.args() + self.extra_backend_args,
+                stdin=sp.PIPE,
                 stdout=sp.PIPE,
                 stderr=sp.STDOUT,
                 text=True,

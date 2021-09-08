@@ -1,8 +1,6 @@
-import ctypes
 import os
 import shutil
 from contextlib import contextmanager
-from functools import wraps
 from pathlib import Path
 from tarfile import TarFile
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -10,50 +8,8 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 import requests
-from better_exceptions import ExceptionFormatter
-from calc import calc as calc_impl
-from calc import default_identifiers
 
-# OS utilities =========================================================================================================
-try:
-    elevated = (os.getuid() == 0)
-except AttributeError:
-    elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
 
-# Exceptions ===========================================================================================================
-class InvalidConfigError(ValueError):
-    pass
-
-_exception_formatter = ExceptionFormatter(colored=False, max_length=None)
-def format_exception(exc, value, tb):
-    return list(_exception_formatter.format_exception(exc, value, tb))
-
-# Misc utilities =======================================================================================================
-@contextmanager
-def atleave(fn):
-    """Use during `with` statement to call something at the end regardless of exceptions.
-
-    Example:
-    ```
-    resource = Resource()
-    with atleave(lambda: release(resource)):
-        # Work on resource
-    ```
-    """
-    try:
-        yield None
-    finally:
-        fn()
-
-@wraps(calc_impl)
-def calc(expr, identifiers=None, unary_operators=None, binary_operators=None):
-    if not isinstance(expr, str):
-        return expr
-
-    identifiers = default_identifiers | (identifiers or {})
-    return calc_impl(expr, identifiers, unary_operators, binary_operators)
-
-# File handling utilities ==============================================================================================
 @contextmanager
 def ClosedNamedTemporaryFile(*, suffix=None, prefix=None, dir=None, errors=None):
     tf = NamedTemporaryFile(suffix=suffix, prefix=prefix, dir=dir, errors=errors, delete=False)

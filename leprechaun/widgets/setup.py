@@ -2,7 +2,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialog, QWidget, QLabel, QProgressBar, QApplication, QVBoxLayout, QFrame, QDialogButtonBox, QPushButton, QSizePolicy, QHBoxLayout, QButtonGroup
 from .base import rem, rempt, font
 import leprechaun as le
-from leprechaun.base import download, extract, InvalidConfigError
+from leprechaun.util import download, extract, InvalidConfigError
 from concurrent.futures import ThreadPoolExecutor
 from yaml.parser import ParserError as YamlParserError
 from yaml.scanner import ScannerError as YamlScannerError

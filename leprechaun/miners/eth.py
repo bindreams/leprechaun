@@ -1,5 +1,5 @@
 import leprechaun as le
-from leprechaun.base import InvalidConfigError, download_and_extract
+from leprechaun.util import InvalidConfigError, download_and_extract
 from leprechaun.api.ethermine import totaldue, totalpaid
 from .base import Miner
 import re

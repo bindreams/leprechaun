@@ -2,7 +2,7 @@ import multiprocessing
 import re
 
 import leprechaun as le
-from leprechaun.base import InvalidConfigError, calc, download_and_extract
+from leprechaun.util import InvalidConfigError, calc, download_and_extract
 from leprechaun.api.supportxmr import totaldue, totalpaid
 from .base import Miner
 

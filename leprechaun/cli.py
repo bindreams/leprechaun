@@ -11,7 +11,7 @@ from PySide2.QtCore import QCoreApplication, QObject, QTimer, Signal
 
 import leprechaun as le
 from leprechaun.api import minerstat
-from leprechaun.base import InvalidConfigError, elevated, format_exception
+from leprechaun.util import InvalidConfigError, isroot, format_exception
 from leprechaun.miners import MinerStack
 
 
@@ -156,7 +156,7 @@ class CliApplication(QObject):
         self.paused = False
 
         # --------------------------------------------------------------------------------------------------------------
-        if not elevated:
+        if not isroot:
             self.log("Warning: running without administrator priveleges may be detrimental to mining speed")
 
     def start(self):
@@ -271,12 +271,12 @@ def main():
     if args.subcommand == "config":
         # Configure ----------------------------------------------------------------------------------------------------
         if args.add_scheduled_task:
-            if not elevated:
+            if not isroot:
                 parser.error("supplied arguments require administrator priveleges")
             add_scheduled_task()
 
         if args.add_security_exception:
-            if not elevated:
+            if not isroot:
                 parser.error("supplied arguments require administrator priveleges")
             add_security_exception()
 

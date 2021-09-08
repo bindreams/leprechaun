@@ -1,5 +1,5 @@
 from PySide2.QtWidgets import QMessageBox, QTextEdit
-from leprechaun.base import format_exception
+from leprechaun.util import format_exception
 from .base import rem
 
 

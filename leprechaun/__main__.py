@@ -10,7 +10,7 @@ from yaml.scanner import ScannerError as YamlScannerError
 
 import leprechaun as le
 from leprechaun import notepad
-from leprechaun.base import InvalidConfigError
+from leprechaun.util import InvalidConfigError
 from leprechaun.cli import CliApplication
 from leprechaun.widgets import Dashboard, ExceptionMessageBox, Setup
 
