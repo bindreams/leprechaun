@@ -114,6 +114,10 @@ class MinerTree(QTreeWidget):
             else:
                 item.setIcon(0, self.icon_ready)
 
+            # For some reason, with custom item delegate, viewport does not update when
+            # a mouse is not moving over it
+            self.viewport().update()
+
     def onItemDoubleClicked(self, item):
         name = item.text(0)
 
