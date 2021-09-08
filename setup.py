@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 install_requires = [
     "cachetools",
-    "pywin32",
+    "pywin32; platform_system=='Windows'",
     "pyyaml",
     "PySide2",
     "pyinstaller",
