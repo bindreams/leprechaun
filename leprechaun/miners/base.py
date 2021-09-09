@@ -46,7 +46,11 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
         try:
             self.address = data["address"]
         except KeyError:
-            addresses = config["addresses"]
+            try:
+                addresses = config["addresses"]
+            except KeyError:
+                raise InvalidConfigError(f"wallet address for currency {self.currency} not found") from None
+
             if self.currency not in addresses:
                 raise InvalidConfigError(f"wallet address for currency {self.currency} not found") from None
 

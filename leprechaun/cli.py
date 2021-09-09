@@ -175,10 +175,12 @@ class CliApplication(QObject):
             config_text = f.read()
         config = yaml.safe_load(config_text)
 
-        addresses = config["addresses"]
-        for currency, value in addresses.items():
-            if value == "<your address here>":
-                raise InvalidConfigError(f"placeholder address for '{currency}' currency")
+        if "addresses" in config:
+            addresses = config["addresses"]
+
+            for currency, value in addresses.items():
+                if value == "<your address here>":
+                    raise InvalidConfigError(f"placeholder address for '{currency}' currency")
 
         self.cpuminers.loadconfig(config, "cpu")
         self.gpuminers.loadconfig(config, "gpu")
