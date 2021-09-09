@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import deque
 import platform
+import sys
 from threading import Thread
 import shlex
 import subprocess as sp
@@ -18,6 +19,11 @@ class MinerMetaclass(type(ABC), type(QObject)):
 class Miner(ABC, QObject, metaclass=MinerMetaclass):
     logUpdated = Signal(str)
     processFinished = Signal(int)
+
+    if sys.platform == "win32":
+        _proc_flags = sp.CREATE_NO_WINDOW
+    else:
+        _proc_flags = 0
 
     def __init__(self, name, data, config):
         super().__init__()
@@ -109,7 +115,7 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
                 stdout=sp.PIPE,
                 stderr=sp.STDOUT,
                 text=True,
-                creationflags=sp.CREATE_NO_WINDOW
+                creationflags=self._proc_flags
             )
             Thread(target=self._poll).start()
 

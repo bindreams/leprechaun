@@ -59,6 +59,5 @@ def launch(path, file=None):
         ],
         stdin=sp.DEVNULL,
         stdout=sp.DEVNULL,
-        stderr=sp.DEVNULL,
-        creationflags=sp.CREATE_NO_WINDOW
+        stderr=sp.DEVNULL
     )
