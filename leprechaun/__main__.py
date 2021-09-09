@@ -17,6 +17,8 @@ from leprechaun.widgets import Dashboard, ExceptionMessageBox, Setup
 
 class Application(CliApplication):
     def __init__(self, config_path=None):
+        # Ensure the data folder exists and log file is opened before initializing
+        le.data_dir.mkdir(exist_ok=True)
         self._fp_log = open(le.data_dir / "log.txt", "a", encoding="utf-8", buffering=1)
         atexit.register(self._fp_log.close)
 
