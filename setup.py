@@ -7,11 +7,20 @@ install_requires = [
     "pywin32; platform_system=='Windows'",
     "pyyaml",
     "PySide2",
-    "pyinstaller",
     "better_exceptions",
     "calc @ https://github.com/andreasxp/calc/archive/refs/heads/main.zip",
     "idle @ https://github.com/andreasxp/idle/archive/refs/heads/main.zip"
 ]
+
+extras_require = {
+    "freeze":  [
+        "pyinstaller",
+    ],
+    "docs": [
+        "sphinx",
+        "furo"
+    ]
+}
 
 entry_points = {
     "gui_scripts": ["leprechaun = leprechaun.__main__:main"],
@@ -26,6 +35,7 @@ setup(
     author_email="andres.zhukov@gmail.com",
     license="MIT",
     install_requires=install_requires,
+    extras_require=extras_require,
     packages=find_packages(include=[
         "leprechaun",
         "leprechaun.*"
