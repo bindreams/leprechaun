@@ -16,8 +16,10 @@ jobs:
         with:
           python-version: '3.x'
       - run: |
-          # Install everything and switch to docs
-          pip install -e .[docs]
+          # Install required packages and switch to new branch
+          # The same packages are available in extras_require[docs], but I don't know of
+          # a good way to import them from setup.py
+          pip install sphinx furo
           git checkout --orphan docs
           # Build docs and remove everything else
           sphinx-build docs/source build
