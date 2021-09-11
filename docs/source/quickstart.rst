@@ -75,27 +75,26 @@ pool and backend fees, and your pending balance (which is usually kept by the po
 On the right, you will see all your miners and their status:
 
 .. |status-running| image:: ../../leprechaun/data/icons/status-running.svg
-  :width: 20px
+  :width: 24em
 
 .. |status-ready| image:: ../../leprechaun/data/icons/status-ready.svg
-  :width: 20px
+  :width: 24em
 
 .. |status-not-allowed| image:: ../../leprechaun/data/icons/status-not-allowed.svg
-  :width: 20px
+  :width: 24em
 
 .. |status-paused| image:: ../../leprechaun/data/icons/status-paused.svg
-  :width: 20px
+  :width: 24em
 
 .. |status-disabled| image:: ../../leprechaun/data/icons/status-disabled.svg
-  :width: 20px
+  :width: 24em
 
 .. |status-broken| image:: ../../leprechaun/data/icons/status-broken.svg
-  :width: 20px
+  :width: 24em
 
 .. list-table::
-  :align: left
   :width: 1000
-  :widths: 8 92
+  :widths: 10 90
 
   * - |status-running|
     - Running right now.
