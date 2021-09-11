@@ -19,7 +19,7 @@ jobs:
           # Install required packages and switch to new branch
           # The same packages are available in extras_require[docs], but I don't know of
           # a good way to import them from setup.py
-          pip install sphinx furo
+          pip install sphinx furo sphinx-copybutton
           git checkout --orphan docs
           # Build docs and remove everything else
           sphinx-build docs/source build

@@ -1,20 +1,32 @@
-.. Leprechaun documentation master file, created by
-   sphinx-quickstart on Sat Sep 11 01:53:04 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+:hide-toc:
 
-Welcome to Leprechaun's documentation!
-======================================
+Leprechaun Miner
+========================================================================================================================
+Leprechaun is a tiny program that lives in your system tray. It mines Ethereum, Monero, and other cryptocurrencies in
+the background while you work. A configuration file allows you to fine-tune which miners work at what time of day,
+while you are afk, etc.
+
+Leprechaun is intended for individuals who would like to take advantage of their computer's power, even when they aren't
+at the keyboard. This program provides tools to customize the mining process so it is as invisible and unobtrusive as
+possible. A short list of features includes:
+
+- 0% developer fee, except for the towards mining pools and closed-source backends;
+- Dashboard with all your earnings in one place, as well as daily and pending earnings;
+- Toggling mining based on your AFK status;
+- Toggling mining based on the time of day;
+- Toggling mining based on day of the week.
+
+Refer to the :doc:`Quick Start Guide <quickstart>` to get started with Leprechaun. Happy mining! 🍀
+
+License
+------------------------------------------------------------------------------------------------------------------------
+Leprechaun Miner is free software, licensed under the terms of the :doc:`GNU General Public License v3.0 <license>`.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :hidden:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   quickstart
+   installation
+   configuration
+   license
+   Github Repository <https://github.com/andreasxp/leprechaun>

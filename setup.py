@@ -18,7 +18,8 @@ extras_require = {
     ],
     "docs": [
         "sphinx",
-        "furo"
+        "furo",
+        "sphinx-copybutton"
     ]
 }
 
