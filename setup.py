@@ -1,5 +1,20 @@
 """Install script for leprechaun."""
 from setuptools import setup, find_packages
+from setuptools.command.egg_info import egg_info
+
+
+class egg_info_ex(egg_info):
+    """Includes license file into `.egg-info` folder."""
+
+    def run(self):
+        # don't duplicate license into `.egg-info` when building a distribution
+        if not self.distribution.have_run.get('install', True):
+            # `install` command is in progress, copy license
+            self.mkpath(self.egg_info)
+            self.copy_file('LICENSE.txt', self.egg_info)
+
+        egg_info.run(self)
+
 
 install_requires = [
     "appdirs",
@@ -33,8 +48,10 @@ setup(
     version="0.5.0",
     description="Friendly crypto miner",
     author="Andrey Zhukov",
-    author_email="andres.zhukov@gmail.com",
-    license="MIT",
+    url="https://github.com/andreasxp/leprechaun",
+    license="GPLv3",
+    license_files = ('LICENSE.txt',),
+    cmdclass = {'egg_info': egg_info_ex},
     install_requires=install_requires,
     extras_require=extras_require,
     packages=find_packages(include=[
