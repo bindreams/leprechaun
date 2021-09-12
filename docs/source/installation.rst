@@ -11,12 +11,12 @@ This script can be downloaded and run manually, or via a single command in Power
 .. important::
 	Always verify the security and contents of any script from the internet you are not familiar with!
 	We know that this code does nothing malicious, but do you trust us? Open
-	`install-leprechaun.ps1 <https://github.com/andreasxp/leprechaun/releases/download/0.4.0/install-leprechaun.ps1>`_
+	`install-leprechaun.ps1 <https://github.com/andreasxp/leprechaun/releases/download/0.5.0/install-leprechaun.ps1>`_
 	and inspect it for yourself.
 
 .. code:: PowerShell
 
-	iex (iwr https://github.com/andreasxp/leprechaun/releases/download/0.4.0/install-leprechaun.ps1)
+	iex (iwr https://github.com/andreasxp/leprechaun/releases/download/0.5.0/install-leprechaun.ps1)
 
 This script will download Leprechaun executables into your ``%AppData%\leprechaun`` directory, and optionally do one or more
 things:
