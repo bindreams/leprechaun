@@ -17,7 +17,7 @@ def module_dir(module_name):
 
 
 a = Analysis(
-    ['leprechaun/cli.py'],
+    ['../leprechaun/__main__.py'],
     pathex=[],
     binaries=[],
     datas=[(module_dir("leprechaun") + "/data", "leprechaun/data")],
@@ -44,7 +44,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='leprechaun-cli',
+    name='leprechaun',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -53,5 +53,5 @@ exe = EXE(
     runtime_tmpdir=None,
     console=True,
     uac_admin=False,
-    icon="assets/icon.ico"
+    icon="../assets/icon.ico"
 )

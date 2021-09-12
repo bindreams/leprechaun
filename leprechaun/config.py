@@ -15,6 +15,11 @@ def add_shortcuts():
             $Shortcut.TargetPath = "{path}"
             {set_args}
             $Shortcut.Save()
+
+            # Set Administrator flag, see https://stackoverflow.com/a/29002207/9118363
+            $bytes = [System.IO.File]::ReadAllBytes($Where)
+            $bytes[0x15] = $bytes[0x15] -bor 0x20 #set byte 21 (0x15) bit 6 (0x20) ON
+            [System.IO.File]::WriteAllBytes($Where, $bytes)
         }}
 
         Set-Shortcut("$env:USERPROFILE/Start Menu/Programs/Leprechaun Miner.lnk")
@@ -22,12 +27,14 @@ def add_shortcuts():
     """
 
     if sys.argv[0].endswith("__main__.py"):
-        path = sys.executable
-        set_args = "$Shortcut.Arguments = '-m leprechaun'"
+        path = Path(sys.executable).with_stem("pythonw")
+        set_args = "$Shortcut.Arguments = '-m leprechaun -gp'"
     else:
-        path = Path(sys.argv[0]).parent / "leprechaun.exe"
-        set_args = ""
+        path = "powershell.exe"
+        exe = Path(sys.argv[0]).parent / "leprechaun.exe"
+        set_args = f"$Shortcut.Arguments = '-Command Start-Process -NoNewWindow \"{exe}\" -gp'"
 
+    print(script.format(path=path, set_args=set_args))
     sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)], check=True)
 
 

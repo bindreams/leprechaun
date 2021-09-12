@@ -42,7 +42,7 @@ extras_require = {
 }
 
 entry_points = {
-    "gui_scripts": ["leprechaun-gui = leprechaun.__main__:mainw"],
+    "gui_scripts": ["leprechaun-gui = leprechaun.gui:main"],
     "console_scripts": ["leprechaun = leprechaun.__main__:main"],
 }
 

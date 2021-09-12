@@ -1,28 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
-import sys
-import os
-from importlib.util import find_spec
-
-sys.setrecursionlimit(5000)
 block_cipher = None
 
-def module_dir(module_name):
-    """Return module's root directory.
-    If the module does not have a directory (it is a single file) then return None.
-    """
-    module_origin = find_spec(module_name).origin
-    if os.path.basename(module_origin) == "__init__.py":
-        return os.path.dirname(module_origin)
-    return None
-
-
 a = Analysis(
-    ['leprechaun/__main__.py'],
+    ['launch-gui.py'],
     pathex=[],
     binaries=[],
-    datas=[(module_dir("leprechaun") + "/data", "leprechaun/data")],
-    hiddenimports=["pywintypes"],
+    datas=[],
+    hiddenimports=[],
     hookspath=[],
+    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
@@ -44,7 +30,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='leprechaun',
+    name='leprechaun-gui',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -52,6 +38,10 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
+    disable_windowed_traceback=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
     uac_admin=True,
-    icon="assets/icon.ico"
+    icon="../assets/icon.ico"
 )
