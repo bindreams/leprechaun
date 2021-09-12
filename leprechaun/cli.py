@@ -31,10 +31,10 @@ def _get_parser():
     parser.set_defaults(subcommand=None)
     subparsers = parser.add_subparsers(title="subcommands")
 
-    # run --------------------------------------------------------------------------------------------------------------
-    parser_run = subparsers.add_parser("run", description="Configure leprechaun.")
-    parser_run.set_defaults(subcommand="run")
-    parser_run.add_argument("file",
+    parser.add_argument("-V", "--version", action="version", version=le.__version__)
+    parser.add_argument("file",
+        nargs="?",
+        default=Path("~/leprechaun.yml").expanduser(),
         type=config_file,
         help="config file with miner settings"
     )
