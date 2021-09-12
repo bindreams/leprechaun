@@ -1,177 +1,102 @@
-import atexit
-import shutil
 import sys
+from argparse import ArgumentParser
+from pathlib import Path
 
-from PySide2.QtCore import QTimer
-from PySide2.QtGui import QFontDatabase, QIcon
-from PySide2.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
-from yaml.parser import ParserError as YamlParserError
-from yaml.scanner import ScannerError as YamlScannerError
+from PySide2.QtCore import QCoreApplication
+from PySide2.QtWidgets import QApplication
 
 import leprechaun as le
-from leprechaun import notepad
-from leprechaun.util import InvalidConfigError
-from leprechaun.cli import CliApplication
-from leprechaun.widgets import Dashboard, ExceptionMessageBox, Setup
+from leprechaun import config
+from leprechaun.application import Application, CliApplication
+from leprechaun.util import isroot
 
 
-class Application(CliApplication):
-    def __init__(self, config_path=None):
-        # Ensure the data folder exists and log file is opened before initializing
-        le.data_dir.mkdir(exist_ok=True)
-        self._fp_log = open(le.data_dir / "log.txt", "a", encoding="utf-8", buffering=1)
-        atexit.register(self._fp_log.close)
+# Parser ===============================================================================================================
+parser = ArgumentParser("leprechaun", description="A tiny crypto miner program that lives in your system tray.")
 
-        super().__init__()
+def config_file(arg):
+    path = Path(arg).expanduser()
+    if path != Path("~/leprechaun.yml").expanduser() and not path.is_file():
+        parser.error(f"config file {path} does not exist")
+    else:
+        return path
 
-        # Icons --------------------------------------------------------------------------------------------------------
-        self.icon_active = QIcon(str(le.sdata_dir / "icons" / "icon.png"))
-        self.icon_idle   = QIcon(str(le.sdata_dir / "icons" / "icon-idle.png"))
+parser.set_defaults(subcommand=None)
+subparsers = parser.add_subparsers(title="subcommands")
 
-        # Qt Application -----------------------------------------------------------------------------------------------
-        qapp = QApplication.instance()
-        qapp.setQuitOnLastWindowClosed(False)
-        qapp.setApplicationDisplayName("Leprechaun Miner")
-        qapp.setWindowIcon(self.icon_active)
+parser.add_argument("-V", "--version", action="version", version=le.__version__)
+parser.add_argument("file",
+    nargs="?",
+    default=Path("~/leprechaun.yml").expanduser(),
+    type=config_file,
+    help="config file with miner settings"
+)
+parser.add_argument("-g", "--gui", action="store_true", help="launch with graphical interface")
+parser.add_argument("-p", "--pipe-log", action="store_true", help="write log to file instead of stdout")
 
-        # Notepad for config editing -----------------------------------------------------------------------------------
-        self.notepad_dir = le.data_dir / "notepad"
-        if not self.notepad_dir.exists():
-            self.notepad_dir.mkdir()
-            notepad.download(self.notepad_dir)
+# config ---------------------------------------------------------------------------------------------------------------
+parser_config = subparsers.add_parser("config", description="Configure leprechaun.")
+parser_config.set_defaults(subcommand="config")
 
-        # Fonts
-        for path in (le.sdata_dir / "fonts").rglob("*.ttf"):
-            QFontDatabase.addApplicationFont(str(path))
+parser_config.add_argument("--add-shortcuts",
+    action="store_true",
+    help="add shortcuts to the start menu and desktop"
+)
 
-        # Dashboard ----------------------------------------------------------------------------------------------------
-        self.dashboard = None
-        """Created and deleted on request to conserve memory."""
+parser_config.add_argument("--add-scheduled-task",
+    action="store_true",
+    help="add scheduled task that launches Leprechaun at startup"
+)
 
-        # System tray icon ---------------------------------------------------------------------------------------------
-        self.system_icon = QSystemTrayIcon(self.icon_active)
-        system_icon_menu = QMenu()
-        self.system_icon_status = system_icon_menu.addAction("Initializing")
-        self.system_icon_status.setEnabled(False)
-        system_icon_menu.addAction("Open Dashboard", self.actionOpenDashboard)
-        self.menu_pause = system_icon_menu.addMenu("Pause mining")
-        self.menu_pause.addAction("Pause for 5 minutes", lambda: self.actionPauseMining(5 * 60))
-        self.menu_pause.addAction("Pause for 20 minutes", lambda: self.actionPauseMining(20 * 60))
-        self.menu_pause.addAction("Pause for 1 hour", lambda: self.actionPauseMining(1 * 60 * 60))
-        self.menu_pause.addAction("Pause for 8 hours", lambda: self.actionPauseMining(8 * 60 * 60))
-
-        self.action_resume = system_icon_menu.addAction("Resume mining")
-        self.action_resume.triggered.connect(self.actionResumeMining)
-        self.action_resume.setVisible(False)
-
-        system_icon_menu.addSeparator()
-        system_icon_menu.addAction("Exit", self.exit)
-
-        self.system_icon.setContextMenu(system_icon_menu)
-
-    def start(self):
-        # Execute user-facing launch as soon as the event loop starts.
-        QTimer.singleShot(0, self._impl_start)
-
-    def _impl_start(self):
-        """User-facing action triggered on program launch."""
-        self.log("Starting")
-
-        try:
-            self.loadconfig()
-        except FileNotFoundError:
-            shutil.copy(le.sdata_dir / "leprechaun-template.yml", self.config_path)
-
-            dialog = Setup(self, Setup.welcome_message)
-            if dialog.exec_() == QDialog.Rejected:
-                QApplication.instance().exit()
-                return
-        except (YamlScannerError, YamlParserError, InvalidConfigError) as e:
-            dialog = Setup(self, "There has been an error loading the configuration file.")
-            dialog.werrorlabel.setText(str(e))
-            if dialog.exec_() == QDialog.Rejected:
-                QApplication.instance().exit()
-                return
-
-        self.system_icon.show()
-        self.heartbeat.start()
-        self.update()
-
-    def update(self):
-        super().update()
-
-        # Status -------------------------------------------------------------------------------------------------------
-        if self.cpuminers.active:
-            if self.gpuminers.active:
-                status = f"{self.cpuminers.active.name} && {self.gpuminers.active.name}"
-            else:
-                status = self.cpuminers.active.name
-        else:
-            if self.gpuminers.active:
-                status = self.gpuminers.active.name
-            else:
-                status = "No active miners"
-
-        self.system_icon_status.setText(status)
-
-        # --------------------------------------------------------------------------------------------------------------
-        if self.dashboard is not None:
-            self.dashboard.update()
-
-    def actionOpenDashboard(self):
-        if self.dashboard is None:
-            self.dashboard = Dashboard(self)
-        self.dashboard.update()
-
-        self.dashboard.show()
-        self.dashboard.raise_()
-        self.dashboard.activateWindow()
-
-    def actionPauseMining(self, duration):
-        self.log(f"Mining paused for {duration}s")
-        self.paused = True
-
-        self.cpuminers.stop()
-        self.gpuminers.stop()
-
-        self.system_icon_status.setText("Mining paused")
-        self.menu_pause.menuAction().setVisible(False)
-        self.action_resume.setVisible(True)
-        self.system_icon.setIcon(self.icon_idle)
-
-        QTimer.singleShot(duration * 1000, self.actionResumeMining)
-
-    def actionResumeMining(self):
-        self.log("Mining resumed")
-        self.paused = False
-
-        self.menu_pause.menuAction().setVisible(True)
-        self.action_resume.setVisible(False)
-        self.system_icon.setIcon(self.icon_active)
-
-        self.update()
-
-    def actionEditConfig(self):
-        notepad.launch(self.notepad_dir, self.config_path)
-
-    def log(self, *args):
-        for line in self.format_log(*args):
-            self._fp_log.write(line)
-
-    def excepthook(self, etype, value, tb):
-        if not isinstance(value, KeyboardInterrupt):
-            wmessage = ExceptionMessageBox(value)
-            wmessage.exec_()
-
-        super().excepthook(etype, value, tb)
+parser_config.add_argument("--add-security-exception",
+    action="store_true",
+    help="add windows security exception for the leprechaun folder"
+)
 
 
+# ======================================================================================================================
 def main():
+    """Run Leprechaun."""
+    args = parser.parse_args()
+
+    if args.subcommand is None:
+        # Run Leprechaun -----------------------------------------------------------------------------------------------
+        if args.gui:
+            qapp = QApplication([])
+            app = Application(args.file, args.pipe_log)
+        else:
+            qapp = QCoreApplication([])
+            app = CliApplication(args.file, args.pipe_log)
+
+        app.start()
+        return qapp.exec_()
+    elif args.subcommand == "config":
+        # Configure ----------------------------------------------------------------------------------------------------
+        if args.add_scheduled_task:
+            if not isroot:
+                parser.error("supplied arguments require administrator priveleges")
+            config.add_scheduled_task()
+
+        if args.add_security_exception:
+            if not isroot:
+                parser.error("supplied arguments require administrator priveleges")
+            config.add_security_exception()
+
+        if args.add_shortcuts:
+            config.add_shortcuts()
+
+
+def mainw():
+    """Special entry point from setup.py gui_scripts.
+
+    Launch the GUI with pythonw in the background, thus removing all interaction with the command line.
+    For this reason this function does not parse CLI args and redirects all logs to a separate file.
+    Equivalent to running `pythonw.exe -m leprechaun -gp`
+    """
     qapp = QApplication([])
+    app = Application(pipe_log=True)
 
-    app = Application()
     app.start()
-
     return qapp.exec_()
 
 

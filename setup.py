@@ -24,8 +24,8 @@ extras_require = {
 }
 
 entry_points = {
-    "gui_scripts": ["leprechaun = leprechaun.__main__:main"],
-    "console_scripts": ["leprechaun-cli = leprechaun.cli:main"],
+    "gui_scripts": ["leprechaun-gui = leprechaun.__main__:mainw"],
+    "console_scripts": ["leprechaun = leprechaun.__main__:main"],
 }
 
 setup(
