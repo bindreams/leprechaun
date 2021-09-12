@@ -37,20 +37,22 @@ def add_scheduled_task():
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
 
         $Description = "Start Leprechaun miner at user logon."
-        $Action = New-ScheduledTaskAction {exe} {args}
+        $Action = New-ScheduledTaskAction {exe_arg} {args}
         $Trigger = New-ScheduledTaskTrigger -AtLogOn
         Register-ScheduledTask -TaskName $TaskName -Description $Description -Action $Action -Trigger $Trigger -RunLevel Highest > $null
     """
 
     if sys.argv[0].endswith("__main__.py"):
-        exe = f"-Execute '{sys.executable}'"
-        args = "-Argument '-m leprechaun'"
+        exe = Path(sys.executable).with_stem("pythonw")
+
+        exe_arg = f"-Execute '{exe}'"
+        args = "-Argument '-m leprechaun -gp'"
     else:
-        path = Path(sys.argv[0]).parent / "leprechaun.exe"
-        exe = f"-Execute '{path}'"
+        path = Path(sys.argv[0]).parent / "leprechaun-gui.exe"
+        exe_arg = f"-Execute '{path}'"
         args = ""
 
-    sp.run(["powershell.exe", "-Command", script.format(exe=exe, args=args)], check=True)
+    sp.run(["powershell.exe", "-Command", script.format(exe_arg=exe_arg, args=args)], check=True)
 
 
 def add_security_exception():
