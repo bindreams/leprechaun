@@ -1,6 +1,7 @@
 """Install script for leprechaun."""
 from setuptools import setup, find_packages
 from setuptools.command.egg_info import egg_info
+from pathlib import Path
 
 
 class egg_info_ex(egg_info):
@@ -15,6 +16,8 @@ class egg_info_ex(egg_info):
 
         egg_info.run(self)
 
+dir = Path(__file__).parent
+long_description = (dir / "README.md").read_text()
 
 install_requires = [
     "appdirs",
@@ -47,6 +50,8 @@ setup(
     name="leprechaun",
     version="0.5.0",
     description="Your friendly neighborhood cryptominer",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author="Andrey Zhukov",
     url="https://github.com/andreasxp/leprechaun",
     license="GPLv3",
