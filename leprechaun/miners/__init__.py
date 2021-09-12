@@ -75,7 +75,8 @@ class MinerStack(MutableMapping):
         if isinstance(new_miner, str):
             new_miner = self[new_miner]
 
-        self.app.log(f"Switching from {active.name if active else None} to {new_miner.name if new_miner else None}")
+        if active != new_miner:
+            self.app.log(f"Switching from {active.name if active else None} to {new_miner.name if new_miner else None}")
 
         if active is not None:
             active.stop()
