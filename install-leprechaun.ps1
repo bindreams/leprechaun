@@ -1,6 +1,6 @@
 $datadir = "$env:LOCALAPPDATA\leprechaun"
 $exepath = "$datadir\leprechaun.exe"
-$exeurl = "https://github.com/andreasxp/leprechaun/releases/download/0.5.0/leprechaun.zip"
+$exeurl = "https://github.com/andreasxp/leprechaun/releases/download/0.5.1/leprechaun.zip"
 
 $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
 $elevated = $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)

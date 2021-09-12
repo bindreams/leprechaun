@@ -10,12 +10,12 @@ line by copying and pasting this line:
 .. important::
   Always verify the security and contents of any script from the internet you are not familiar with!
   We know that this code does nothing malicious, but do you trust us? Open
-  `install-leprechaun.ps1 <https://github.com/andreasxp/leprechaun/releases/download/0.5.0/install-leprechaun.ps1>`_
+  `install-leprechaun.ps1 <https://github.com/andreasxp/leprechaun/releases/download/0.5.1/install-leprechaun.ps1>`_
   and inspect it for yourself.
 
 .. code:: PowerShell
 
-  iex (iwr https://github.com/andreasxp/leprechaun/releases/download/0.5.0/install-leprechaun.ps1)
+  iex (iwr https://github.com/andreasxp/leprechaun/releases/download/0.5.1/install-leprechaun.ps1)
 
 The install script will ask you a couple questions. In particular, we recommend answering "Yes" to adding a Windows
 Security exception. Otherwise you will have to manually approve every miner executable, as Windows considers mining
