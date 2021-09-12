@@ -55,13 +55,12 @@ After ``pip install``, you can launch the package from command line as follows:
 
 .. code:: bash
 
-  python -m leprechaun      # Launch Leprechaun GUI
-  leprechaun                # Launch Leprechaun GUI (alternative)
+  leprechaun-gui        # Launch Leprechaun GUI
 
-  python -m leprechaun.cli  # Launch Leprechaun CLI
-  leprechaun-cli            # Launch Leprechaun CLI (alternative)
+  python -m leprechaun  # Launch Leprechaun CLI
+  leprechaun            # Launch Leprechaun CLI (alternative)
 
-Leprechaun CLI supports interaction using command line. Use ``leprechaun-cli --help`` to find out more.
+Leprechaun CLI supports interaction using CLI as well as the GUI. Use ``leprechaun --help`` to find out more.
 
 Freezing
 ------------------------------------------------------------------------------------------------------------------------
@@ -81,4 +80,4 @@ Finally, to freeze the python package into an executable, use the included scrip
   python build.py
 
 The executables will be in the ``dist`` folder. To add shortcuts, launch at startup, or otherwise configure the
-application, use ``leprechaun-cli.exe config <options>``.
+application, use ``./leprechaun config <options>``.
