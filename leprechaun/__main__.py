@@ -38,9 +38,14 @@ parser.add_argument("-p", "--pipe-log", action="store_true", help="write log to 
 parser_config = subparsers.add_parser("config", description="Configure leprechaun.")
 parser_config.set_defaults(subcommand="config")
 
-parser_config.add_argument("--add-shortcuts",
+parser_config.add_argument("--add-start-shortcut",
     action="store_true",
-    help="add shortcuts to the start menu and desktop"
+    help="add a shortcut to the Start Menu"
+)
+
+parser_config.add_argument("--add-desktop-shortcut",
+    action="store_true",
+    help="add a shortcut to the Desktop"
 )
 
 parser_config.add_argument("--add-scheduled-task",
@@ -82,8 +87,11 @@ def main():
                 parser.error("supplied arguments require administrator priveleges")
             config.add_security_exception()
 
-        if args.add_shortcuts:
-            config.add_shortcuts()
+        if args.add_start_shortcut:
+            config.add_shortcut(Path("~/AppData/Roaming/Microsoft/Windows/Start Menu/Programs").expanduser())
+
+        if args.add_desktop_shortcut:
+            config.add_shortcut(Path("~/Desktop").expanduser())
 
 
 if __name__ == "__main__":

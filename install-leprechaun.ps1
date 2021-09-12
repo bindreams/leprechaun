@@ -14,18 +14,16 @@ $tmp | Remove-Item
 Write-Host "Done!" -Foreground Green
 
 # ======================================================================================================================
-$needConfig = $false
 $needElevation = $false
 
 # Shortcuts, done in this script
-$title    = "Would you like to create a shortcut in start menu and on the desktop?"
-$description = "If you add a shortcut, Leprechaun will be accessible in Windows search."
+$title    = "Would you like to create a shortcut on the Desktop?"
+$description = "If you answer 'No', Leprechaun will still be accessible from the Start Menu."
 $choices  = "&Yes", "&No"
-$argShortcuts = ""
+$argShortcut = ""
 $decision = $Host.UI.PromptForChoice($title, $description, $choices, 0)
 if ($decision -eq 0) {
-    $needConfig = $true
-    $argShortcuts = "--add-shortcuts"
+    $argShortcut = "--add-desktop-shortcut"
 }
 
 # Startup, done in nested launch with priveleges
@@ -35,7 +33,6 @@ $choices  = "&Yes", "&No"
 $argStartupTask = ""
 $decision = $Host.UI.PromptForChoice($title, $description, $choices, 0)
 if ($decision -eq 0) {
-    $needConfig = $true
     $argStartupTask = "--add-scheduled-task"
 
     if (!$elevated) {
@@ -50,7 +47,6 @@ $choices  = "&Yes", "&No"
 $argSecurityException = ""
 $decision = $Host.UI.PromptForChoice($title, $description, $choices, 0)
 if ($decision -eq 0) {
-    $needConfig = $true
     $argSecurityException = "--add-security-exception"
 
     if (!$elevated) {
@@ -62,25 +58,23 @@ Write-Host ""
 Write-Host -NoNewline "Installing Leprechaun... "
 
 # Config run
-if ($needConfig) {
-    if ($needElevation) {
-        $p = Start-Process $exepath `
-            -WindowStyle Hidden `
-            -Wait -PassThru `
-            -Verb RunAs `
-            -ArgumentList "config $argShortcuts $argStartupTask $argSecurityException"
-    } else {
-        $p = Start-Process $exepath `
-            -WindowStyle Hidden `
-            -Wait -PassThru `
-            -ArgumentList "config $argShortcuts $argStartupTask $argSecurityException"
-    }
+if ($needElevation) {
+    $p = Start-Process $exepath `
+        -WindowStyle Hidden `
+        -Wait -PassThru `
+        -Verb RunAs `
+        -ArgumentList "config --add-start-shortcut $argShortcut $argStartupTask $argSecurityException"
+} else {
+    $p = Start-Process $exepath `
+        -WindowStyle Hidden `
+        -Wait -PassThru `
+        -ArgumentList "config --add-start-shortcut $argShortcut $argStartupTask $argSecurityException"
+}
 
-    if ($p.ExitCode -ne 0) {
-        Write-Host "Error" -Foreground Red
-        Write-Host ("There has been an error during installation. Error code: {0}" -f $p.ExitCode) -Foreground Red
-        exit 1
-    }
+if ($p.ExitCode -ne 0) {
+    Write-Host "Error" -Foreground Red
+    Write-Host ("There has been an error during installation. Error code: {0}" -f $p.ExitCode) -Foreground Red
+    exit 1
 }
 
 Write-Host "Done!" -Foreground Green

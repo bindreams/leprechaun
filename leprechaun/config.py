@@ -5,37 +5,24 @@ from pathlib import Path
 import leprechaun as le
 
 
-def add_shortcuts():
+def add_shortcut(where):
     script = """
         $WshShell = New-Object -ComObject WScript.Shell
-        function Set-Shortcut() {{
-            param($Where)
 
-            $Shortcut = $WshShell.CreateShortcut($Where)
-            $Shortcut.TargetPath = "{path}"
-            {set_args}
-            $Shortcut.Save()
-
-            # Set Administrator flag, see https://stackoverflow.com/a/29002207/9118363
-            $bytes = [System.IO.File]::ReadAllBytes($Where)
-            $bytes[0x15] = $bytes[0x15] -bor 0x20 #set byte 21 (0x15) bit 6 (0x20) ON
-            [System.IO.File]::WriteAllBytes($Where, $bytes)
-        }}
-
-        Set-Shortcut("$env:USERPROFILE/Start Menu/Programs/Leprechaun Miner.lnk")
-        Set-Shortcut("$env:USERPROFILE/Desktop/Leprechaun Miner.lnk")
+        $Shortcut = $WshShell.CreateShortcut("{where}/Leprechaun Miner.lnk")
+        $Shortcut.TargetPath = "{path}"
+        {set_args}
+        $Shortcut.Save()
     """
 
     if sys.argv[0].endswith("__main__.py"):
         path = Path(sys.executable).with_stem("pythonw")
         set_args = "$Shortcut.Arguments = '-m leprechaun -gp'"
     else:
-        path = "powershell.exe"
-        exe = Path(sys.argv[0]).parent / "leprechaun.exe"
-        set_args = f"$Shortcut.Arguments = '-Command Start-Process -NoNewWindow \"{exe}\" -gp'"
+        path = Path(sys.argv[0]).parent / "leprechaun-gui.exe"
+        set_args = ""
 
-    print(script.format(path=path, set_args=set_args))
-    sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args)], check=True)
+    sp.run(["powershell.exe", "-Command", script.format(path=path, set_args=set_args, where=where)], check=True)
 
 
 def add_scheduled_task():
