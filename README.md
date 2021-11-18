@@ -9,7 +9,7 @@ Leprechaun is intended for individuals who would like to take advantage of their
 - Toggling mining based on the time of day;
 - Toggling mining based on day of the week.
 
-Refer to the [Quick Start Guide](https://andreasxp.github.io/leprechaun/quickstart.html) to get started with Leprechaun. Happy mining! 🍀
+Refer to the [documentation](https://andreasxp.github.io/leprechaun/quickstart.html) to get started with Leprechaun. Happy mining! 🍀
 
 ## License
 Leprechaun Miner is free software, licensed under the terms of the [GNU General Public License v3.0](LICENSE.txt).
