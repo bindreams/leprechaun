@@ -4,7 +4,7 @@ System requirements: Windows 10 or higher, 64 bit. Work is underway to make Lepr
 
 Installation
 ------------------------------------------------------------------------------------------------------------------------
-Leprechaun does not provide an installer. Instead, you can run the automatic instll script in your PowerShell command
+Leprechaun does not provide an installer. Instead, you can run the automatic install script in your PowerShell command
 line by copying and pasting this line:
 
 .. important::
