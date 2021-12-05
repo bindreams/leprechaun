@@ -21,6 +21,9 @@ __all__ = [
     # Suprocess management
     "popen",
 
+    # Qt Signals
+    "Signal",
+
     # Misc utilities
     "isroot",
     "atleave",
@@ -31,6 +34,7 @@ from .exceptions import InvalidConfigError, format_exception
 from .files import (ClosedNamedTemporaryFile, download, download_and_extract,
                     extract)
 from .subprocess import popen
+from .signal import Signal
 
 # Misc utilities =======================================================================================================
 if os.name == "nt":

@@ -1,6 +1,6 @@
 from functools import lru_cache
-from PySide2.QtGui import QFontDatabase
-from PySide2.QtWidgets import QApplication, QWidget
+from PySide6.QtGui import QFontDatabase
+from PySide6.QtWidgets import QApplication, QWidget
 
 @lru_cache(maxsize=None)
 def logicalDpi():

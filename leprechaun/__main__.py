@@ -2,8 +2,8 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
-from PySide2.QtCore import QCoreApplication
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 
 import leprechaun as le
 from leprechaun import config
@@ -74,7 +74,7 @@ def main():
             app = CliApplication(args.file, args.pipe_log)
 
         app.start()
-        return qapp.exec_()
+        return qapp.exec()
     elif args.subcommand == "config":
         # Configure ----------------------------------------------------------------------------------------------------
         if args.add_scheduled_task:

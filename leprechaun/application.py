@@ -8,9 +8,9 @@ from itertools import chain
 from pathlib import Path
 
 import yaml
-from PySide2.QtCore import QCoreApplication, QObject, QTimer, Signal
-from PySide2.QtGui import QFontDatabase, QIcon
-from PySide2.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
+from PySide6.QtCore import QCoreApplication, QTimer
+from PySide6.QtGui import QFontDatabase, QIcon
+from PySide6.QtWidgets import QApplication, QDialog, QMenu, QSystemTrayIcon
 from yaml.parser import ParserError as YamlParserError
 from yaml.scanner import ScannerError as YamlScannerError
 
@@ -18,17 +18,14 @@ import leprechaun as le
 from leprechaun import notepad
 from leprechaun.api import minerstat
 from leprechaun.miners import MinerStack
-from leprechaun.util import InvalidConfigError, format_exception, isroot
+from leprechaun.util import InvalidConfigError, format_exception, isroot, Signal
 from leprechaun.widgets import Dashboard, ExceptionMessageBox, Setup
 
 
 # CliApplication =======================================================================================================
 Earnings = namedtuple("Earnings", ["total", "pending", "daily"])
 
-class CliApplication(QObject):
-    cpuMinerChanged = Signal(str)
-    gpuMinerChanged = Signal(str)
-
+class CliApplication:
     def __init__(self, config_path=None, pipe_log=False):
         super().__init__()
 
@@ -57,6 +54,8 @@ class CliApplication(QObject):
         # Miners -------------------------------------------------------------------------------------------------------
         self.cpuminers = MinerStack(self)
         self.gpuminers = MinerStack(self)
+        self.cpuMinerChanged = Signal(str)
+        self.gpuMinerChanged = Signal(str)
         self.cpuminers.onchange = self.cpuMinerChanged.emit
         self.gpuminers.onchange = self.gpuMinerChanged.emit
 
@@ -241,13 +240,13 @@ class Application(CliApplication):
             shutil.copy(le.sdata_dir / "leprechaun-template.yml", self.config_path)
 
             dialog = Setup(self, Setup.welcome_message)
-            if dialog.exec_() == QDialog.Rejected:
+            if dialog.exec() == QDialog.Rejected:
                 QApplication.instance().exit()
                 return
         except (YamlScannerError, YamlParserError, InvalidConfigError) as e:
             dialog = Setup(self, "There has been an error loading the configuration file.")
             dialog.werrorlabel.setText(str(e))
-            if dialog.exec_() == QDialog.Rejected:
+            if dialog.exec() == QDialog.Rejected:
                 QApplication.instance().exit()
                 return
 
@@ -315,6 +314,6 @@ class Application(CliApplication):
     def excepthook(self, etype, value, tb):
         if not isinstance(value, KeyboardInterrupt):
             wmessage = ExceptionMessageBox(value)
-            wmessage.exec_()
+            wmessage.exec()
 
         super().excepthook(etype, value, tb)

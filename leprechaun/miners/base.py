@@ -6,20 +6,11 @@ from threading import Thread
 import shlex
 import subprocess as sp
 
-from PySide2.QtCore import QObject, Signal
-
-from leprechaun.util import InvalidConfigError, popen
+from leprechaun.util import InvalidConfigError, popen, Signal
 from leprechaun.conditions import condition
 
 
-class MinerMetaclass(type(ABC), type(QObject)):
-    pass
-
-
-class Miner(ABC, QObject, metaclass=MinerMetaclass):
-    logUpdated = Signal(str)
-    processFinished = Signal(int)
-
+class Miner(ABC):
     if sys.platform == "win32":
         _proc_flags = sp.CREATE_NO_WINDOW
     else:
@@ -37,6 +28,9 @@ class Miner(ABC, QObject, metaclass=MinerMetaclass):
 
         self.running_process = None
         self.log = deque(maxlen=1000)
+
+        self.logUpdated = Signal(str)
+        self.processFinished = Signal(int)
 
         # Parsing configuration ----------------------------------------------------------------------------------------
         if "currency" not in data:

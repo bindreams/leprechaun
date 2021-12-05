@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QMessageBox, QTextEdit
+from PySide6.QtWidgets import QMessageBox, QTextEdit
 from leprechaun.util import format_exception
 from .base import rem
 

@@ -1,5 +1,5 @@
 import sys
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from leprechaun.application import Application
 
 def main():
@@ -15,7 +15,7 @@ def main():
     app = Application(pipe_log=True)
 
     app.start()
-    return qapp.exec_()
+    return qapp.exec()
 
 
 if __name__ == "__main__":

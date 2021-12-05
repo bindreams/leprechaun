@@ -1,9 +1,9 @@
 from itertools import chain
 from concurrent.futures import ThreadPoolExecutor
 
-from PySide2.QtCore import QSize, Qt, Signal
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
     QFrame, QGridLayout, QLabel, QStyle, QStyledItemDelegate, QTextEdit, QTreeWidget, QTreeWidgetItem, QWidget
 )
 

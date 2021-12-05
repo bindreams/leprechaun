@@ -24,7 +24,7 @@ install_requires = [
     "cachetools",
     "pywin32; platform_system=='Windows'",
     "pyyaml",
-    "PySide2",
+    "PySide6",
     "better_exceptions",
     "calc @ https://github.com/andreasxp/calc/archive/refs/heads/main.zip",
     "idle @ https://github.com/andreasxp/idle/archive/refs/heads/main.zip"

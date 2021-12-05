@@ -1,5 +1,5 @@
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QDialog, QWidget, QLabel, QProgressBar, QApplication, QVBoxLayout, QFrame, QDialogButtonBox, QPushButton, QSizePolicy, QHBoxLayout, QButtonGroup
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QWidget, QLabel, QProgressBar, QApplication, QVBoxLayout, QFrame, QDialogButtonBox, QPushButton, QSizePolicy, QHBoxLayout, QButtonGroup
 from .base import rem, rempt, font
 import leprechaun as le
 from leprechaun.util import download, extract, InvalidConfigError
