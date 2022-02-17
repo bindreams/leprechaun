@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Leprechaun'
-copyright = '2021, Andrey Zhukov'
+copyright = '2021-2022, Andrey Zhukov'
 author = 'Andrey Zhukov'
 
 # The full version, including alpha/beta/rc tags

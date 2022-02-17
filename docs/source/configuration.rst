@@ -3,7 +3,8 @@ Configuration
 This page provides reference for ``leprechaun.yml`` - the configuration file Leprechaun uses.
 This configuration file needs to be located in your home directory, such as ``C:\Users\User\leprechaun.yml``.
 
-The global structure of the file consists of three optional entries:
+The global structure of the file consists of four optional entries:
+  #. ``theme``, your color theme which can be either ``light`` (default) or ``dark``;
   #. ``addresses``, which contains your wallet addresses for mining (see `example <#config-file-example>`_);
   #. ``cpu-miners``, which holds a miner stack of your CPU miners;
   #. ``gpu-miners``, which holds a miner stack of your GPU miners.
