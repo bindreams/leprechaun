@@ -25,6 +25,7 @@ from leprechaun.widgets import Dashboard, ExceptionMessageBox, Setup
 # CliApplication =======================================================================================================
 Earnings = namedtuple("Earnings", ["total", "pending", "daily"])
 
+
 class CliApplication:
     def __init__(self, config_path=None, pipe_log=False):
         super().__init__()
@@ -94,6 +95,8 @@ class CliApplication:
 
         self.cpuminers.loadconfig(config, "cpu")
         self.gpuminers.loadconfig(config, "gpu")
+
+        return config
 
     def earnings(self) -> Earnings:
         """Calculate earnings in USD from all miners.
@@ -183,7 +186,7 @@ class Application(CliApplication):
 
         # Icons --------------------------------------------------------------------------------------------------------
         self.icon_active = QIcon(str(le.sdata_dir / "icons" / "icon.png"))
-        self.icon_idle   = QIcon(str(le.sdata_dir / "icons" / "icon-idle.png"))
+        self.icon_idle = QIcon(str(le.sdata_dir / "icons" / "icon-idle.png"))
 
         # Qt Application -----------------------------------------------------------------------------------------------
         qapp = QApplication.instance()
@@ -274,6 +277,18 @@ class Application(CliApplication):
         # --------------------------------------------------------------------------------------------------------------
         if self.dashboard is not None:
             self.dashboard.update()
+
+    def loadconfig(self):
+        config = super().loadconfig()
+
+        theme = config.get("theme", "light")
+        try:
+            with open(le.sdata_dir / "themes" / theme / "style.qss", "r") as f:
+                stylesheet = f.read()
+        except FileNotFoundError:
+            raise InvalidConfigError(f"could not find theme \"{theme}\"")
+
+        QApplication.instance().setStyleSheet(stylesheet)
 
     def actionOpenDashboard(self):
         if self.dashboard is None:

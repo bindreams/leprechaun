@@ -43,22 +43,22 @@ class Log(QTextEdit):
 
 
 class MinerTree(QTreeWidget):
-    icon_ready       = None
-    icon_running     = None
+    icon_ready = None
+    icon_running = None
     icon_not_allowed = None
-    icon_disabled    = None
-    icon_broken      = None
-    icon_paused      = None
+    icon_disabled = None
+    icon_broken = None
+    icon_paused = None
 
     class ItemDelegate(QStyledItemDelegate):
         def paint(self, painter, option, index):
-            #create a styled option object
+            # create a styled option object
             super().initStyleOption(option, index)
 
             style = option.widget.style()
             indent = option.widget.indentation()
 
-            #draw indented item
+            # draw indented item
             option.rect.setLeft(indent)
             style.drawControl(QStyle.CE_ItemViewItem, option, painter, option.widget)
 
@@ -90,12 +90,12 @@ class MinerTree(QTreeWidget):
         self.setItemDelegate(self.ItemDelegate())
 
         if self.icon_ready is None:
-            MinerTree.icon_ready       = QIcon(str(le.sdata_dir / "icons" / "status-ready.svg"))
-            MinerTree.icon_running     = QIcon(str(le.sdata_dir / "icons" / "status-running.svg"))
+            MinerTree.icon_ready = QIcon(str(le.sdata_dir / "icons" / "status-ready.svg"))
+            MinerTree.icon_running = QIcon(str(le.sdata_dir / "icons" / "status-running.svg"))
             MinerTree.icon_not_allowed = QIcon(str(le.sdata_dir / "icons" / "status-not-allowed.svg"))
-            MinerTree.icon_disabled    = QIcon(str(le.sdata_dir / "icons" / "status-disabled.svg"))
-            MinerTree.icon_broken      = QIcon(str(le.sdata_dir / "icons" / "status-broken.svg"))
-            MinerTree.icon_paused      = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
+            MinerTree.icon_disabled = QIcon(str(le.sdata_dir / "icons" / "status-disabled.svg"))
+            MinerTree.icon_broken = QIcon(str(le.sdata_dir / "icons" / "status-broken.svg"))
+            MinerTree.icon_paused = QIcon(str(le.sdata_dir / "icons" / "status-paused.svg"))
 
     def update(self):
         for name, miner in chain(self.app.cpuminers.items(), self.app.gpuminers.items()):
@@ -129,6 +129,17 @@ class MinerTree(QTreeWidget):
         wlog.show()
 
 
+class NumericLabel(QLabel):
+    def __init__(self, text=""):
+        super().__init__(text)
+
+        self.setStyleSheet("""
+            padding: 0 0.5em 0 0.5em;
+            font: 18pt "Open Sans";
+        """)
+        self.setAlignment(Qt.AlignCenter)
+
+
 class Dashboard(QWidget):
     closed = Signal()
 
@@ -136,34 +147,19 @@ class Dashboard(QWidget):
         super().__init__()
         self.app = app
 
-        moneyfont = font("Open Sans", size=2.25*rempt())
-
         f = self.font()
         f.setPointSizeF(1.2*rempt())
         self.setFont(f)
 
-        self.wtotal = QLabel("$‒‒.‒‒")
-        self.wtotal.setStyleSheet("padding: 0 0.5em 0 0.5em")
-        self.wtotal.setFont(moneyfont)
-        self.wtotal.setAlignment(Qt.AlignCenter)
-        self.wtotal.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-
-        self.wpending = QLabel("$‒‒.‒‒")
-        self.wpending.setStyleSheet("padding: 0 0.5em 0 0.5em")
-        self.wpending.setFont(moneyfont)
-        self.wpending.setAlignment(Qt.AlignCenter)
-        self.wpending.setFrameStyle(QFrame.Panel | QFrame.Sunken)
-
-        self.wdaily = QLabel("$‒‒.‒‒")
-        self.wdaily.setStyleSheet("padding: 0 0.5em 0 0.5em")
-        self.wdaily.setFont(moneyfont)
-        self.wdaily.setAlignment(Qt.AlignCenter)
-        self.wdaily.setFrameStyle(QFrame.Panel | QFrame.Sunken)
+        self.wtotal = NumericLabel("$‒‒.‒‒")
+        self.wpending = NumericLabel("$‒‒.‒‒")
+        self.wdaily = NumericLabel("$‒‒.‒‒")
 
         # Footer
         self.wcredits = QLabel()
         self.wcredits.setStyleSheet("color: #808080")
-        self.wcredits.setText("Currency information provided by <a href=\"https://minerstat.com/\"><span style=\"color:#808080;\">minerstat</span>")
+        self.wcredits.setText(
+            "Currency information provided by <a href=\"https://minerstat.com/\"><span style=\"color:#808080;\">minerstat</span>")
         self.wcredits.setTextFormat(Qt.RichText)
         self.wcredits.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.wcredits.setOpenExternalLinks(True)
@@ -177,7 +173,10 @@ class Dashboard(QWidget):
         self.future_earnings = None
 
         # Layout -------------------------------------------------------------------------------------------------------
+        self.setContentsMargins(0, 0, 0, 0)
         ly = QGridLayout()
+        ly.setSpacing(10)
+        ly.setContentsMargins(10, 10, 10, 10)
         self.setLayout(ly)
 
         ly.addWidget(QLabel("Total earnings:"), 0, 0)

@@ -1,0 +1,36 @@
+Dashboard {
+	background-color: #f3f3f3;
+	color: #202020;
+	font-size: 10pt;
+}
+
+MinerTree, NumericLabel {
+	background-color: #ffffff;
+	border: 1px solid #eeebee;
+	border-radius: 5px;
+}
+
+MinerTree {
+	padding: 0.2em;
+}
+
+MinerTree::branch:has-children {
+	border-color: #eeebee;
+}
+
+MinerTree::branch:closed:has-children {
+	image: url(leprechaun/data/themes/light/branch-closed.png);
+}
+
+MinerTree::branch:open:has-children {
+	image: url(leprechaun/data/themes/light/branch-open.png);
+}
+
+QMenu {
+	background-color: #f2f2f2;
+	color: #202020;
+}
+
+QMenu::item:selected {
+    background-color: #91c9f7;
+}
