@@ -51,7 +51,7 @@ entry_points = {
 
 setup(
     name="leprechaun",
-    version="0.5.1",
+    version="0.5.2",
     description="Your friendly neighborhood cryptominer",
     long_description=long_description,
     long_description_content_type='text/markdown',

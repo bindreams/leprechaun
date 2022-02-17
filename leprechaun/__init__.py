@@ -1,7 +1,7 @@
 from pathlib import Path
 from appdirs import user_data_dir
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 dir = Path(__file__).parent
 sdata_dir = dir / "data"  # Static data dir
