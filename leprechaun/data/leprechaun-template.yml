@@ -1,6 +1,8 @@
 # Leprechaun config file example
 # More info at https://andreasxp.github.io/leprechaun/configuration.html
 
+theme: light  # Try also with "dark"
+
 # Paste your addresses here
 addresses:
   XMR: "<your address here>"
