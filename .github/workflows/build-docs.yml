@@ -2,7 +2,7 @@ name: build-docs
 
 on:
   push:
-    branches: main
+    branches: [main]
 
   workflow_dispatch:
 
@@ -14,12 +14,12 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: "3.x"
       - run: |
           # Install required packages and switch to new branch
           # The same packages are available in extras_require[docs], but I don't know of
           # a good way to import them from setup.py
-          pip install sphinx furo sphinx-copybutton
+          pip install sphinx furo==2022.1.2 sphinx-copybutton
           git checkout --orphan docs
           # Build docs and remove everything else
           sphinx-build docs/source build

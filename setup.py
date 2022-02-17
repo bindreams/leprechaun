@@ -39,7 +39,7 @@ extras_require = {
     ],
     "docs": [
         "sphinx",
-        "furo",
+        "furo==2022.1.2",
         "sphinx-copybutton"
     ]
 }
